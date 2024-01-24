@@ -1,0 +1,214 @@
+---
+# Supported options: 
+#   sn-nature:       Style for submissions to Nature Portfolio journals
+#   sn-basic:        Basic Springer Nature Reference Style/Chemistry Reference Style
+#   sn-mathphys:     Math and Physical Sciences Reference Style
+#   sn-aps:          American Physical Society (APS) Reference Style
+#   sn-vancouver:    Vancouver Reference Style
+#   sn-apa:          APA Reference Style 
+#   sn-chicago:      Chicago-based Humanities Reference Style
+#   default:         Default
+
+classoptions: 
+  - sn-apa      
+  # - Numbered      # Optional: Use numbered references instead of namedate references (only for sn-nature, sn-basic, sn-vancouver, sn-chicago, sn-mathphys or sn-nature)
+  # - referee       # Optional: Use double line spacing 
+  # - lineno        # Optional: Add line numbers
+  # - iicol         # Optional: Double column layour
+
+title: "Arriaga meets Kitagawa. life expectancy decompositions including population subgroups"
+
+titlerunning: Arriaga meets Kitagawa
+
+
+
+authors: 
+  - prefix: Dr.
+    firstname: Timothy
+    #particle: van 
+    lastname: Riffe
+    #suffix: III
+    #naturename: Poet Laureate
+    #degrees: MSc, PhD
+    email: tim.riffe@ehu.eus
+    affiliation: [1,2,3]
+    corresponding: TRUE
+#    equalcont: These authors contributed equally to this work.
+    
+  # - firstname: Second
+  #   lastname: Author
+  #   affiliation: 2
+  #   equalcont: These authors contributed equally to this work.
+
+
+affiliations:
+  - number: 1
+    corresponding: TRUE
+    info:
+      orgdiv: Department of Sociology and Social Work
+      orgname: University of the Basque Country (UPV/EHU)
+    address:
+        street: Barrio Sarriena s/n
+        city: Leioa
+        postcode: 48940
+        state: Bizkaia
+        country: Spain
+  - number: 2
+    corresponding: FALSE
+    info:
+      orgname: Ikerbasque (Basque Foundation for Science)
+  - number: 3
+    corresponding: FALSE
+    info:
+      orgdiv: Laboratory of Population Health
+      orgname: Max Planck Institute for Demographic Research
+  
+keywords:
+  - Decomposition
+  - Mortality
+  - Cause of death
+  - Population Structure
+  - Mortality Inequalities
+
+# pacs: 
+#   jel:
+#     - "D8"
+#     - "H51"
+#   msc:
+#     - "35A01"
+#     - "65L10"
+
+# Sample for unstructured abstract 
+# abstract: |
+#   The abstract serves both as a general introduction to the topic and as a brief, non-technical summary of the main results and their implications. Authors are advised to check the author instructions for the journal they are submitting to for word limits and if structural elements like subheadings, citations, or equations are permitted.
+
+# Sample for structured abstract
+abstract: |
+ **Background**: An Arriaga (1984) decomposition allows us to decompose differences in life expectancy into contributions due to mortality rate differences in each age. A Kitawaga (1955) decomposition allows us to decompose differences in a weighted mean into effects from differences in structure and differences in the weighted value.
+
+ **Objective:** Sometimes we would like to decompose a difference between two populations that are each composed of like-defined subpopulations. Said decomposition would produce effects for each age of each subpopulation, as well as a marginal effect of composition differences. I propose a straightforward analytic method to do this. 
+
+ **Methods:** In short, within-subpopulation life expectancy differences can be handled by the Arriaga method. The case of weighting together the life expectancies of subpopulations by way of a composed radix can be handled using the well-known Kitagawa method. The elements of the value component of the Kitagawa method tell us how to rescale the Arriaga results specific to each subpopulation.
+
+ **Results:** I show the proposed analytic method to be equivalent to a Horiuchi et al (2008) reframing of the same problem. Some mentionable properties: (i) There is no limit to the number of subpopulations, (ii) it is straightforward to incorporate cause-of-death information, (iii) composition is here only considered in the radix age. I currently have results for simulated mortality rates, but I promise to wrangle up an empirical application to demonstrate the method. 
+
+ **Conclusions:** The analytic decomposition method I propose is advantageous compared to a Horiuchi method for this problem purely for reasons of computational efficiency. This method could help further disentangle the effects of mortality and composition differences in explaining or clarifying paradoxes or secular change. I promise to think further about subpopulation weighting that might occur over all ages (using prevalence information).}
+
+bibliography: bibliography.bib
+
+header-includes: |
+  %% Per the spinger doc, new theorem styles can be included using built in style, 
+  %% but it seems the don't work so commented below
+  %\theoremstyle{thmstyleone}%
+  \newtheorem{theorem}{Theorem}%  meant for continuous numbers
+  %%\newtheorem{theorem}{Theorem}[section]% meant for sectionwise numbers
+  %% optional argument [theorem] produces theorem numbering sequence instead of independent numbers for Proposition
+  \newtheorem{proposition}[theorem]{Proposition}%
+  %%\newtheorem{proposition}{Proposition}% to get separate numbers for theorem and proposition etc.
+
+  %% \theoremstyle{thmstyletwo}%
+  \theoremstyle{remark}
+  \newtheorem{example}{Example}%
+  \newtheorem{remark}{Remark}%
+
+  %% \theoremstyle{thmstylethree}%
+  \theoremstyle{definition}
+  \newtheorem{definition}{Definition}%
+
+output: rticles::springer_article
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,
+                      out.extra = "")  # This forces knitr to label all figures.
+```
+
+# Introduction
+
+An @arriaga1984measuring decomposition allows us to decompose changes in life expectancy into contributions due to mortality changes in different ages. The method was designed to be practical, and framed in terms of age lifetable columns expressed in discrete age groups. A well-known property of the method is that mortality changes in different ages need not be proportional. Derived contributions also sum exactly to the observed life expectancy difference. A not-well-known property of the method is that it is asymmetrical, in the sense that the absolute values of age-specific contributions depend on whether we compare population 1 with 2, or population 2 with 1. A further property of the method is that it is designed to work with homogeneous populations, meaning that populations 1 and 2 are each homogeneous, in the sense that each is expressed with only one lifetable.
+
+A @kitagawa1955components decomposition allows us to decompose differences in a weighted mean due to differences in weights (structure) and differences in the value being weighted (often rates, but in our case life expectancies). This widely-used decomposition method is well-known to be exact in that the resulting structure and value components sum exactly to the observed difference in weighted means. The individual elements (ages, or life expectancies for us) of the value being weighted have identifiable effects. It is not well-known that the individual elements of the structure component do not have identifiable effects. Rather, the structure effects should be summed to a a marginal effect due to differences in structure.
+
+Sometimes we have a situation where we would like to decompose a difference between two populations that are each composed of like-defined subpopulations. For example, life expectancy in France versus Spain, each with education-specific subpopulations. In such situations, a decomposition should tell us the contribution to the difference in overall life expectancy due to rate differences in each age in each subpopulation, and also separate an effect due to overall compositional change. In this paper, I would like to propose a straightforward analytic method to decompose in this way. In short, within-subpopulation life expectancy differences can be handled by the Arriaga method. The case of weighting together the life expectancies of subpopulations by way of a composed radix can be handled using the well-known Kitagawa method. The elements of the value component of the Kitagawa method tell us how to rescale the Arriaga results specific to each subpopulation so as to isolate the age-subpopulation-specific effects on the overall life expectancy difference. I will justify this rescaling, and show that the results of this procedure are fully consistent with the results of a @horiuchi2008decomposition reframing of the problem.
+
+# Method
+
+## Notation
+
+Arriaga decompositions can be implemented in a number of relevant ways, per Riffe et. al. (2024), from which we here consider only symmetrical Arriaga decompositions. This implies following the original formulas twice, once in each direction, and averaging the sign-adjusted results. For this, we use the following lifetable columns:
+
+```{=tex}
+\begin{itemize}
+
+\item{$\ell(a)$} lifetable survivorship at exact age $a$.
+
+\item{${}_nL_a$} lifetable person years lived in the interval $[a,a+n)$.
+
+\item{$T_a$} total lifetable person years lived beyond age $a$.
+
+\item{$e_a$} remaining life expectancy at exact age $a$.
+
+\end{itemize}
+```
+We also use the superscript $s$ to index subpopulations comprising the total population, and the superscript $t$ to index time points, or some other way of differentiating the total population. The index $e^{s,t}_0$ reads as "life expectancy at birth for subpopulation $s$ at time $t$", e.g. $e^{low, 1990}_0$ could be the life expectancy in 1990 of a low education group.
+
+Then one can write Arriaga's standard decomposition method like as per eq~\eqref{eq_arriaga1}. To keep things simple, we assume a lifetable radix of 1, meaning $\ell_0 = 1$.
+
+
+$$
+\begin{aligned}
+{}_n\Delta_x &= e_0^{s,2} - e_0^{s,1} \\
+ &= \ell_x^{s,1} \cdot \left( \frac{{}_nL_x^{s,2}}{\ell_x^{s,2}} - \frac{{}_nL_x^{s,1}}{\ell_x^{s,1}}\right)+T_{x+n}^{s,2}\cdot\left(\frac{\ell_x^{s,1}}{\ell_x^{s,2}} - \frac{\ell_{x+n}^{s,1}}{\ell_{x+n}^{s,2}}\right)
+\end{aligned}
+$$
+
+\backmatter
+
+\bmhead{Supplementary information}
+
+If your article has accompanying supplementary file/s please state so here.
+
+Authors reporting data from electrophoretic gels and blots should supply the full unprocessed scans for key as part of their Supplementary information. This may be requested by the editorial team/s if it is missing.
+
+Please refer to Journal-level guidance for any specific requirements.
+
+\bmhead{Acknowledgments}
+
+Acknowledgments are not compulsory. Where included they should be brief. Grant or contribution numbers may be acknowledged.
+
+Please refer to Journal-level guidance for any specific requirements.
+
+# Declarations {.unnumbered}
+
+Some journals require declarations to be submitted in a standardised format. Please check the Instructions for Authors of the journal to which you are submitting to see if you need to complete this section. If yes, your manuscript must contain the following sections under the heading \`Declarations':
+
+-   Funding
+-   Conflict of interest/Competing interests (check journal-specific guidelines for which heading to use)
+-   Ethics approval
+-   Consent to participate
+-   Consent for publication
+-   Availability of data and materials
+-   Code availability
+-   Authors' contributions
+
+\noindent If any of the sections are not relevant to your manuscript, please include the heading and write \`Not applicable' for that section.
+
+::: {.flushleft latex="true"}
+Editorial Policies for:
+
+\noindent Springer journals and proceedings: <https://www.springer.com/gp/editorial-policies>
+
+\noindent Nature Portfolio journals: <https://www.nature.com/nature-research/editorial-policies>
+
+\noindent \textit{Scientific Reports}: <https://www.nature.com/srep/journal-policies/editorial-policies>
+
+\noindent BMC journals: <https://www.biomedcentral.com/getpublished/editorial-policies>
+:::
+
+::: {.appendices latex="true"}
+# Section title of first appendix {#secA1}
+
+An appendix contains supplementary information that is not an essential part of the text itself but which may be helpful in providing a more comprehensive understanding of the research problem or it is information that is too cumbersome to be included in the body of the paper.
+
+For submissions to Nature Portfolio Journals please use the heading "Extended Data".
+:::
