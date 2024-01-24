@@ -62,6 +62,7 @@
 %% \theoremstyle{thmstylethree}%
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}%
+\usepackage{amsmath}
 
 
 
@@ -111,8 +112,9 @@ Planck Institute for Demographic Research}}
 \abstract{\textbf{Background}: An Arriaga (1984) decomposition allows us
 to decompose differences in life expectancy into contributions due to
 mortality rate differences in each age. A Kitawaga (1955) decomposition
-allows us to decompose differences in a weighted mean into effects from
-differences in structure and differences in the weighted value.
+allows us to decompose differences in a weighted mean into an effect
+from differences in structure and effects from differences in each
+element of the weighted value.
 
 \textbf{Objective:} Sometimes we would like to decompose a difference
 between two populations that are each composed of like-defined
@@ -206,10 +208,10 @@ reframing of the problem.
 \subsection{Notation}\label{notation}}
 
 Arriaga decompositions can be implemented in a number of relevant ways,
-per Riffe et. al.~(2024), from which we here consider only symmetrical
-Arriaga decompositions. This implies following the original formulas
-twice, once in each direction, and averaging the sign-adjusted results.
-For this, we use the following lifetable columns:
+per Riffe et. al.~(2024), from which we here consider only
+\emph{symmetrical} Arriaga decomposition. This implies following the
+original formulas twice, once in each direction, and averaging the
+sign-adjusted results. For this, we use the following lifetable columns:
 
 \begin{itemize}
 
@@ -228,18 +230,33 @@ total population, and the superscript \(t\) to index time points, or
 some other way of differentiating the total population. The index
 \(e^{s,t}_0\) reads as ``life expectancy at birth for subpopulation
 \(s\) at time \(t\)'', e.g.~\(e^{low, 1990}_0\) could be the life
-expectancy in 1990 of a low education group.
+expectancy in 1990 of a low education group. The first stage of our
+exercise is to decompose subgroup-specific differences in life
+expectancy (hence the \(^s\) on everything):
 
-Then one can write Arriaga's standard decomposition method like as per
-eq\textasciitilde{}\eqref{eq_arriaga1}. To keep things simple, we assume
-a lifetable radix of 1, meaning \(\ell_0 = 1\).
+\begin{align}
+{}\Delta^s &= e_0^{s,2} - e_0^{s,1}  \\
+ &= \sum _x^\omega {}_n\Delta_x^s \quad \textrm{,}\nonumber 
+\end{align}
 
-\[
-\begin{aligned}
-{}_n\Delta_x &= e_0^{s,2} - e_0^{s,1} \\
- &= \ell_x^{s,1} \cdot \left( \frac{{}_nL_x^{s,2}}{\ell_x^{s,2}} - \frac{{}_nL_x^{s,1}}{\ell_x^{s,1}}\right)+T_{x+n}^{s,2}\cdot\left(\frac{\ell_x^{s,1}}{\ell_x^{s,2}} - \frac{\ell_{x+n}^{s,1}}{\ell_{x+n}^{s,2}}\right)
-\end{aligned}
-\]
+\noindent where \(\omega\) is the highest (open) age group, and
+\(\Delta^s\) is the subgroup-specific (\(s\)) difference in life
+expectancy being decomposed, and it is composed of age-specific
+contributions, \({}_n\Delta_x^s\), which can be calculated following
+Arriaga's decomposition method following eq \eqref{eq_arriaga1}. I'll
+use a lifetable radix of 1, meaning \(\ell_0 = 1\) to reduce the formula
+a bit.
+
+\begin{equation}
+\label{eq_arriaga1}
+ {}_n\Delta_x^s = \begin{cases}\ell_x^{s,1} \cdot \left( \frac{{}_nL_x^{s,2}}{\ell_x^{s,2}} - \frac{{}_nL_x^{s,1}}{\ell_x^{s,1}}\right)+T_{x+n}^{s,2}\cdot\left(\frac{\ell_x^{s,1}}{\ell_x^{s,2}} - \frac{\ell_{x+n}^{s,1}}{\ell_{x+n}^{s,2}}\right)  & \text{$ \forall x < \omega$}  \\
+  \ell_\omega ^{s,1} \cdot (e_\omega^{s,2} -e_\omega^{s,1} ) & \text{$\forall x = \omega $}
+  \end{cases}
+\end{equation}
+
+Equation \eqref{eq_arriaga1} is the first pass of our symmetrical
+decomposition, where we move \emph{forward} in time from \(t=1\) to
+\(t=2\), so please permit . It
 
 \backmatter
 
@@ -247,13 +264,6 @@ a lifetable radix of 1, meaning \(\ell_0 = 1\).
 
 If your article has accompanying supplementary file/s please state so
 here.
-
-Authors reporting data from electrophoretic gels and blots should supply
-the full unprocessed scans for key as part of their Supplementary
-information. This may be requested by the editorial team/s if it is
-missing.
-
-Please refer to Journal-level guidance for any specific requirements.
 
 \bmhead{Acknowledgments}
 
@@ -295,23 +305,6 @@ heading `Declarations':
 
 \noindent If any of the sections are not relevant to your manuscript,
 please include the heading and write `Not applicable' for that section.
-
-\begin{flushleft}
-Editorial Policies for:
-
-\noindent Springer journals and proceedings:
-\url{https://www.springer.com/gp/editorial-policies}
-
-\noindent Nature Portfolio journals:
-\url{https://www.nature.com/nature-research/editorial-policies}
-
-\noindent \textit{Scientific Reports}:
-\url{https://www.nature.com/srep/journal-policies/editorial-policies}
-
-\noindent BMC journals:
-\url{https://www.biomedcentral.com/getpublished/editorial-policies}
-
-\end{flushleft}
 
 \begin{appendices}
 
