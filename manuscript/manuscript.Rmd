@@ -123,13 +123,14 @@ knitr::opts_chunk$set(echo = FALSE,
                       out.extra = "")  # This forces knitr to label all figures.
 ```
 
-# Introduction
+# Background
 
 An @arriaga1984measuring decomposition allows us to decompose changes in life expectancy into contributions due to mortality changes in different ages. The method was designed to be practical, and framed in terms of age lifetable columns expressed in discrete age groups. A well-known property of the method is that mortality changes in different ages need not be proportional. Derived contributions also sum exactly to the observed life expectancy difference. A not-well-known property of the method is that it is asymmetrical, in the sense that the absolute values of age-specific contributions depend on whether we compare population 1 with 2, or population 2 with 1. A further property of the method is that it is designed to work with homogeneous populations, meaning that populations 1 and 2 are each homogeneous, in the sense that each is expressed with only one lifetable.
 
 A @kitagawa1955components decomposition allows us to decompose differences in a weighted mean due to differences in weights (structure) and differences in the value being weighted (often rates, but in our case life expectancies). This widely-used decomposition method is well-known to be exact in that the resulting structure and value components sum exactly to the observed difference in weighted means. The individual elements (ages, or life expectancies for us) of the value being weighted have identifiable effects. It is not well-known that the individual elements of the structure component do not have identifiable effects. Rather, the structure effects should be summed to a a marginal effect due to differences in structure.
 
-Sometimes we have a situation where we would like to decompose a difference between two populations that are each composed of like-defined subpopulations. For example, life expectancy in France versus Spain, each with education-specific subpopulations. In such situations, a decomposition should tell us the contribution to the difference in overall life expectancy due to rate differences in each age in each subpopulation, and also separate an effect due to overall compositional change. In this paper, I would like to propose a straightforward analytic method to decompose in this way. In short, within-subpopulation life expectancy differences can be handled by the Arriaga method. The case of weighting together the life expectancies of subpopulations by way of a composed radix can be handled using the well-known Kitagawa method. The elements of the value component of the Kitagawa method tell us how to rescale the Arriaga results specific to each subpopulation so as to isolate the age-subpopulation-specific effects on the overall life expectancy difference. I will justify this rescaling, and show that the results of this procedure are fully consistent with the results of a @horiuchi2008decomposition reframing of the problem.
+# Introduction
+A demographer might like to decompose a difference in life expectancy between two populations (or one population at two times) that are each composed of like-defined subpopulations. For example, life expectancy in France versus Spain, each with education-specific subpopulations, or a national life expectancy calculated as the weighted average of its regions at two points in time. In such situations, a decomposition would ideally tell us the contribution to the difference in overall life expectancy due to rate differences in each age in each subpopulation, and also separate an effect due to overall compositional change. In this paper, I would like to propose a straightforward analytic method to decompose in this way. In short, within-subpopulation life expectancy differences can be handled by the Arriaga method. The case of weighting together the life expectancies of subpopulations by way of a composed radix can be handled using the well-known Kitagawa method. The elements of the value component of the Kitagawa method tell us how to rescale the Arriaga results specific to each subpopulation so as to isolate the age-subpopulation-specific effects on the overall life expectancy difference. I will justify this rescaling, and show that the results of this procedure are fully consistent with the results of a @horiuchi2008decomposition reframing of the problem.
 
 # Method
 
@@ -159,17 +160,17 @@ There are two major approaches to producing average life expectancy for a total 
 
 \begin{equation}
 \label{eq_avg}
-e_0 = \sum_s^S \pi^s \cdot e_0^s \quad \textrm{,}
+e_0 = \sum_s \pi^s \cdot e_0^s \quad \textrm{,}
 \end{equation}
 
-\noindent where the $S$ total subgroup fractions comprise a mixing distribution, $1 = \sum_s^S \pi^s$. 
+\noindent where the $S$ total subgroup fractions comprise a mixing distribution, $1 = \sum_s \pi^s$. 
 
 ## Kitagawa decomposition 
 Eq \eqref{eq_avg} treats the total life expectancy as a weighted average, which means we can decompose a change over time in $e_0$ ($\Delta = e_0^2 - e_o^1$) exactly using the formulas from @kitagawa1955components. Specifically, eq \eqref{eq_kit_comp} gives an overall effect of changes in composition:
 
 \begin{equation}
 \label{eq_kit_comp}
-\Delta^\text{composition} = \sum_s^S \left(\pi^{s,t2}- \pi^{s,t1}\right) \cdot \frac{e_0^{s,t1} + e_0^{s,t2}}{2} \quad \textrm{,}
+\Delta^\text{composition} = \sum_s \left(\pi^{s,t2}- \pi^{s,t1}\right) \cdot \frac{e_0^{s,t1} + e_0^{s,t2}}{2} \quad \textrm{,}
 \end{equation}
 
 This result is widely known, but many are unaware that the composition effect should be summed like this, since the group-specific composition (structure) effects are not well-identified. Eq \eqref{eq_kit_e0} gives the subgroup-specific effects from changes in life expectancy:
@@ -183,7 +184,7 @@ Eq \eqref{eq_kit_sum} says that the overall change in life expectancy is the sum
 
 \begin{equation}
 \label{eq_kit_sum}
-\Delta = \Delta^\text{composition}  + \sum_s^S \Delta^{e_0^s\text{~change}}
+\Delta = \Delta^\text{composition}  + \sum_s \Delta^{e_0^s\text{~change}}
 \end{equation}
 
 ## Symmetrical Arriaga decomposition
@@ -192,10 +193,10 @@ The above-mentioned _rate_ effect can be conceived of as the _net_ effect on tot
 \begin{align}
 \label{eq_kit_e0}
 \Delta^s &= e_0^{s,2} - e_0^{s,1}  \\
- &= \sum _x^\omega {}_n\Delta_x^s \quad \textrm{,}\nonumber 
+ &= \sum _x {}_n\Delta_x^s \quad \textrm{,}\nonumber 
 \end{align}
 
-\noindent where $\omega$ is the highest (open) age group, and $\Delta^s$ is the subgroup-specific ($s$) difference in life expectancy being decomposed, and it is composed of age-specific contributions, $\overrightarrow{{}_n\Delta_x^s}$ or $\overleftarrow{{}_n\Delta_x^s}$ depending on whether we decompose forward in time or backward, respectively (Riffe et. al., 2024). The forward age-specific values $\overrightarrow{{}_n\Delta_x^s}$ can be calculated following Arriaga's decomposition method following eq \eqref{eq_arriaga1}, consistent with @arriaga1984measuring or the presentation in @preston2000demography. I use a lifetable radix of 1, meaning $\ell_0 = 1$, to reduce the formula slightly. 
+\noindent where $\Delta^s$ is the subgroup-specific ($s$) difference in life expectancy being decomposed, and it is composed of age-specific contributions, $\overrightarrow{{}_n\Delta_x^s}$ or $\overleftarrow{{}_n\Delta_x^s}$ depending on whether we decompose forward in time or backward, respectively (Riffe et. al., 2024). The forward age-specific values $\overrightarrow{{}_n\Delta_x^s}$ can be calculated following Arriaga's decomposition method following eq \eqref{eq_arriaga1}, consistent with @arriaga1984measuring or the presentation in @preston2000demography. I use a lifetable radix of 1, meaning $\ell_0 = 1$, to reduce the formula slightly. 
 
 \begin{equation}
 \label{eq_arriaga1}
@@ -217,7 +218,7 @@ Importantly,
 
 \begin{align}
 \label{eq_sum2}
- -\Delta^s &= \sum_x^\omega \overleftarrow{{}_n\Delta_x^s} \\
+ -\Delta^s &= \sum_x \overleftarrow{{}_n\Delta_x^s} \\
  &= e_0^1 - e_0^2 \nonumber
 \end{align}
 
@@ -232,12 +233,20 @@ Repeat the above to derive ${}_n\Delta_x^s$ for each within-subpopulation compar
 
 ## Rescale Arriaga results
 
-The quantity ${}_n\Delta_x^s$ given in eq \eqref{eq_arriaga3} is on the scale of group $s$ specific life expectancy changes, but to know its net impact on overall life expectancy change we rescale per eq \eqref{eq_rescale} to match the effect sizes from eq \eqref{eq_kit_e0}
+The age-specific quantities ${}_n\Delta_x^s$ derived from eq \eqref{eq_arriaga3} are on the scale of subgroup-specific life expectancy changes. To know the net impact of ${}_n\Delta_x^s$ on overall life expectancy change we rescale per eq \eqref{eq_rescale} to match the effect sizes from eq \eqref{eq_kit_e0}
 
 \begin{equation}
 \label{eq_rescale}
-{}_n\Delta_x^{s,\text{net effect}} = \Delta^{e_0^s\text{~change}} \cdot \frac{{}_n\Delta_x^s}{\Delta^s}
+{}_n\Delta_x^{s,\text{net}} = \Delta^{e_0^s\text{~change}} \cdot \frac{{}_n\Delta_x^s}{\Delta^s} \quad \mathrm{.}
 \end{equation}
+
+With eqs \eqref{eq_kit_comp} and \eqref{eq_rescale}, we have all elements of the present decomposition:
+
+\begin{equation}
+\label{eq_full}
+\Delta = \Delta^\text{composition} + \sum_s \sum_x {}_n\Delta_x^{s,\text{net}}
+\end{equation}
+
 
 \backmatter
 
@@ -248,26 +257,23 @@ If your article has accompanying supplementary file/s please state so here.
 
 \bmhead{Acknowledgments}
 
-Acknowledgments are not compulsory. Where included they should be brief. Grant or contribution numbers may be acknowledged.
-
-Please refer to Journal-level guidance for any specific requirements.
+Thanks to Michael Lachanski for posing to me the question that led to the solution I present here, to Jonas Schoeley for first bringing the composition problem with the Kitagawa method to my attention, and to the MPIDR Laboratory of Population Health for posing assorted questions in September 2023 that got me thinking in these lines. 
 
 # Declarations {.unnumbered}
 
-Some journals require declarations to be submitted in a standardised format. Please check the Instructions for Authors of the journal to which you are submitting to see if you need to complete this section. If yes, your manuscript must contain the following sections under the heading \`Declarations':
+Some journals require declarations to be submitted in a standardised format. Please check the Instructions for Authors of the journal to which you are submitting to see if you need to complete this section. If yes, your manuscript must contain the following sections under the heading 
 
--   Funding
--   Conflict of interest/Competing interests (check journal-specific guidelines for which heading to use)
--   Ethics approval
--   Consent to participate
--   Consent for publication
--   Availability of data and materials
--   Code availability
--   Authors' contributions
+## Funding
+This work was financed in part by grant nr SR22-00502 from _la Caixa Foundation_ and grant nr PID2022-142762OA-I00 from the Spanish _Ministerio de Ciencia e Innovación_.
 
-\noindent If any of the sections are not relevant to your manuscript, please include the heading and write \`Not applicable' for that section.
+## Conflict of interest
+The author declares no conflict of interest
 
+## Availability of data and materials
+All data are ___
 
+## Code availability
+All code used here is available in an open `GitHub` repository \url{https://github.com/timriffe/arriagakitagawa}
 
 ::: {.appendices latex="true"}
 # Section title of first appendix {#secA1}
