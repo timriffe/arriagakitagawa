@@ -135,7 +135,7 @@ Sometimes we have a situation where we would like to decompose a difference betw
 
 ## Notation
 
-Arriaga decompositions can be implemented in a number of relevant ways, per Riffe et. al. (2024), from which we here consider only _symmetrical_ Arriaga decomposition. This implies following the original formulas twice, once in each direction, and averaging the sign-adjusted results. For this, we use the following lifetable columns:
+In formulas, we use the following variables and scripting, most of which are lifetable columns:
 
 ```{=tex}
 \begin{itemize}
@@ -148,27 +148,96 @@ Arriaga decompositions can be implemented in a number of relevant ways, per Riff
 
 \item{$e_a$} remaining life expectancy at exact age $a$.
 
+\item{$\pi^s$} the initial population fraction for subgroup $s$ at the initial age. 
 \end{itemize}
 ```
-We also use the superscript $s$ to index subpopulations comprising the total population, and the superscript $t$ to index time points, or some other way of differentiating the total population. The index $e^{s,t}_0$ reads as "life expectancy at birth for subpopulation $s$ at time $t$", e.g. $e^{low, 1990}_0$ could be the life expectancy in 1990 of a low education group. The first stage of our exercise is to decompose subgroup-specific differences in life expectancy (hence the $^s$ on everything):
+We also use the superscript $s$ to index subpopulations comprising the total population, and the superscript $t$ to index time points, or some other way of differentiating the total population. The index $e^{s,t}_0$ reads as "life expectancy at birth for subpopulation $s$ at time $t$", e.g. $e^{low, 1990}_0$ could be the life expectancy in 1990 of a low education group. 
+
+## Averaging life expectancy
+
+There are two major approaches to producing average life expectancy for a total population composed of subgroups, as @vaupel2002life points out. One could derive the average mortality rate in each age by summing the respective deaths and exposures from subpopulations and then deriving the rate, as the Human Mortality Database @wilmoth2021methods does, then recalculate the total population lifetable from these. This is what Vaupel called _current rates_ approach, which ignores even controllable heterogeneity. The other approach derives subgroup-specific lifetables, then weights life expectancies together according to an initial mixing composition in order to arrive at the total life expectancy. This is Vaupel's _current conditions_ approach, at least in part. This second approach is what is often done in multistate models (cite), but also sometimes with standard lifetables, for example, when doing between-within decompositions of variance or other similar summary measures. Our decomposition method deals with this second case, specifically, we have:
+
+\begin{equation}
+\label{eq_avg}
+e_0 = \sum_s^S \pi^s \cdot e_0^s \quad \textrm{,}
+\end{equation}
+
+\noindent where the $S$ total subgroup fractions comprise a mixing distribution, $1 = \sum_s^S \pi^s$. 
+
+## Kitagawa decomposition 
+Eq \eqref{eq_avg} treats the total life expectancy as a weighted average, which means we can decompose a change over time in $e_0$ ($\Delta = e_0^2 - e_o^1$) exactly using the formulas from @kitagawa1955components. Specifically, eq \eqref{eq_kit_comp} gives an overall effect of changes in composition:
+
+\begin{equation}
+\label{eq_kit_comp}
+\Delta^\text{composition} = \sum_s^S \left(\pi^{s,t2}- \pi^{s,t1}\right) \cdot \frac{e_0^{s,t1} + e_0^{s,t2}}{2} \quad \textrm{,}
+\end{equation}
+
+This result is widely known, but many are unaware that the composition effect should be summed like this, since the group-specific composition (structure) effects are not well-identified. Eq \eqref{eq_kit_e0} gives the subgroup-specific effects from changes in life expectancy:
+
+\begin{equation}
+\label{eq_kit_e0}
+\Delta^{e_0^s\text{~change}} = \left(e_0^{s,t2} - e_0^{s,t1}\right) \cdot \frac{\pi^{s,t1} + \pi^{s,t2}}{2}\quad \textrm{.}
+\end{equation}
+
+Eq \eqref{eq_kit_sum} says that the overall change in life expectancy is the sum of (i) a single component that captures the effect of composition change and (ii) a set of components describing the effect on overall life expectancy from each group's specific life expectancy change. This second effect could just as well be called the _rate_ effect, since each life expectancy is fully determined by mortality rates. 
+
+\begin{equation}
+\label{eq_kit_sum}
+\Delta = \Delta^\text{composition}  + \sum_s^S \Delta^{e_0^s\text{~change}}
+\end{equation}
+
+## Symmetrical Arriaga decomposition
+The above-mentioned _rate_ effect can be conceived of as the _net_ effect on total life expectancy change of the age-specific effects within subgroups, as isolated by the many varieties of life expectancy decompositions. In this case, it does not matter much which method we choose to derive age-specific effects for subgroup-specific changes in life expectancy. The @arriaga1984measuring decomposition approach is popular in part because it is efficient, analytic, and sums exactly to the observed life expectancy difference. This method can be implemented in a number of relevant ways, per Riffe et. al. (2024), from which we here consider only _symmetrical_ Arriaga decomposition. This implies following the original formulas twice, once in each direction, and averaging the sign-adjusted results. We repeat this exercise for each subgroup to decompose group-specific changes in life expectancy (hence the $^s$ on everything):
 
 \begin{align}
-{}\Delta^s &= e_0^{s,2} - e_0^{s,1}  \\
+\label{eq_kit_e0}
+\Delta^s &= e_0^{s,2} - e_0^{s,1}  \\
  &= \sum _x^\omega {}_n\Delta_x^s \quad \textrm{,}\nonumber 
 \end{align}
 
-\noindent where $\omega$ is the highest (open) age group, and $\Delta^s$ is the subgroup-specific ($s$) difference in life expectancy being decomposed, and it is composed of age-specific contributions, ${}_n\Delta_x^s$, which can be calculated following Arriaga's decomposition method following eq \eqref{eq_arriaga1}. I'll use a lifetable radix of 1, meaning $\ell_0 = 1$ to reduce the formula a bit. 
-
+\noindent where $\omega$ is the highest (open) age group, and $\Delta^s$ is the subgroup-specific ($s$) difference in life expectancy being decomposed, and it is composed of age-specific contributions, $\overrightarrow{{}_n\Delta_x^s}$ or $\overleftarrow{{}_n\Delta_x^s}$ depending on whether we decompose forward in time or backward, respectively (Riffe et. al., 2024). The forward age-specific values $\overrightarrow{{}_n\Delta_x^s}$ can be calculated following Arriaga's decomposition method following eq \eqref{eq_arriaga1}, consistent with @arriaga1984measuring or the presentation in @preston2000demography. I use a lifetable radix of 1, meaning $\ell_0 = 1$, to reduce the formula slightly. 
 
 \begin{equation}
 \label{eq_arriaga1}
- {}_n\Delta_x^s = \begin{cases}\ell_x^{s,1} \cdot \left( \frac{{}_nL_x^{s,2}}{\ell_x^{s,2}} - \frac{{}_nL_x^{s,1}}{\ell_x^{s,1}}\right)+T_{x+n}^{s,2}\cdot\left(\frac{\ell_x^{s,1}}{\ell_x^{s,2}} - \frac{\ell_{x+n}^{s,1}}{\ell_{x+n}^{s,2}}\right)  & \text{$ \forall x < \omega$}  \\
+ \overrightarrow{{}_n\Delta_x^s} = \begin{cases}\ell_x^{s,1} \cdot \left( \frac{{}_nL_x^{s,2}}{\ell_x^{s,2}} - \frac{{}_nL_x^{s,1}}{\ell_x^{s,1}}\right)+T_{x+n}^{s,2}\cdot\left(\frac{\ell_x^{s,1}}{\ell_x^{s,2}} - \frac{\ell_{x+n}^{s,1}}{\ell_{x+n}^{s,2}}\right)  & \text{$ \forall x < \omega$}  \\
   \ell_\omega ^{s,1} \cdot (e_\omega^{s,2} -e_\omega^{s,1} ) & \text{$\forall x = \omega $}
   \end{cases}
 \end{equation}
 
-Equation \eqref{eq_arriaga1} is the first pass of our symmetrical decomposition, where we move _forward_ in time from $t=1$ to $t=2$, so please permit . It
+Equation \eqref{eq_arriaga1} is the first pass of our symmetrical decomposition, and \eqref{eq_arriaga2} is the second pass, identical except all time superscripts are swapped.
+ 
+\begin{equation}
+\label{eq_arriaga2}
+ \overleftarrow{{}_n\Delta_x^s} = \begin{cases}\ell_x^{s,2} \cdot \left( \frac{{}_nL_x^{s,1}}{\ell_x^{s,1}} - \frac{{}_nL_x^{s,2}}{\ell_x^{s,2}}\right)+T_{x+n}^{s,1}\cdot\left(\frac{\ell_x^{s,2}}{\ell_x^{s,1}} - \frac{\ell_{x+n}^{s,2}}{\ell_{x+n}^{s,1}}\right)  & \text{$ \forall x < \omega$}  \\
+  \ell_\omega ^{s,2} \cdot (e_\omega^{s,1} -e_\omega^{s,2} ) & \text{$\forall x = \omega $}
+  \end{cases}
+\end{equation}
 
+Importantly,
+
+\begin{align}
+\label{eq_sum2}
+ -\Delta^s &= \sum_x^\omega \overleftarrow{{}_n\Delta_x^s} \\
+ &= e_0^1 - e_0^2 \nonumber
+\end{align}
+
+Then our symmetrical estimate of ${}_n\Delta_x^s$ is just the average of these:
+
+\begin{equation}
+\label{eq_arriaga3}
+{}_n\Delta_x^s = \frac{\left(\overrightarrow{{}_n\Delta_x^s} -  \overleftarrow{{}_n\Delta_x^s}\right)}{2}
+\end{equation}
+
+Repeat the above to derive ${}_n\Delta_x^s$ for each within-subpopulation comparison.
+
+## Rescale Arriaga results
+
+The quantity ${}_n\Delta_x^s$ given in eq \eqref{eq_arriaga3} is on the scale of group $s$ specific life expectancy changes, but to know its net impact on overall life expectancy change we rescale per eq \eqref{eq_rescale} to match the effect sizes from eq \eqref{eq_kit_e0}
+
+\begin{equation}
+\label{eq_rescale}
+{}_n\Delta_x^{s,\text{net effect}} = \Delta^{e_0^s\text{~change}} \cdot \frac{{}_n\Delta_x^s}{\Delta^s}
+\end{equation}
 
 \backmatter
 
