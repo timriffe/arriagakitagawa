@@ -252,7 +252,7 @@ before <-
   geom_density(stat = "identity",
                alpha = 0.8,
                color = "white") +
-  facet_grid(vars(cause),vars(educ)) +
+  facet_grid(vars(cause),vars(educ),switch = "y") +
   theme_bw() +
   scale_x_continuous(breaks = pretty_breaks()) +
   scale_color_viridis_b() +
@@ -262,11 +262,13 @@ before <-
     strip.background = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    strip.text = element_text(face = "bold", color = "black"),
-    legend.text = element_text(face = "bold", color = "black"),
-    legend.title = element_text(face = "bold", color = "black"),
-    axis.text = element_text(color = "black")) +
+    strip.text = element_text(face = "bold", color = "black", size =14),
+    strip.text.y.left = element_text(angle = 0),
+    legend.text = element_text(face = "bold", color = "black", size =12),
+    legend.title = element_text(face = "bold", color = "black", size =12),
+    axis.text = element_text(color = "black", size =12)) +
   labs(fill = "Education groups")
+before
 # ----------------------------------------------------------------------- #
 after <-
   decomp_total |>
@@ -293,7 +295,7 @@ after <-
   geom_density(stat = "identity",
                alpha = 0.8,
                color = "white") +
-  facet_grid(vars(cause),vars(educ)) +
+  facet_grid(vars(cause),vars(educ),switch = "y") +
   theme_bw() +
   scale_x_continuous(breaks = pretty_breaks()) +
   scale_color_viridis_b() +
@@ -303,12 +305,13 @@ after <-
     strip.background = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    strip.text = element_text(face = "bold", color = "black"),
-    legend.text = element_text(face = "bold", color = "black"),
-    legend.title = element_text(face = "bold", color = "black"),
-    axis.text = element_text(color = "black")) +
+    strip.text = element_text(face = "bold", color = "black", size =14),
+    strip.text.y.left = element_text(angle = 0),
+    legend.text = element_text(face = "bold", color = "black", size =12),
+    legend.title = element_text(face = "bold", color = "black", size =12),
+    axis.text = element_text(color = "black", size =12)) +
   labs(fill = "Education groups")
-
+after
 composed <-
   decomp_total |>
   filter(year == "2016-2019") |>
@@ -336,7 +339,7 @@ composed <-
                color = "white",
                position = "stack",
                linewidth = .25) +
-  facet_grid(rows = vars(cause)) +
+  facet_grid(rows = vars(cause), switch = "y") +
   theme_bw() +
   scale_x_continuous(breaks = pretty_breaks()) +
   scale_color_viridis_b() +
@@ -346,24 +349,26 @@ composed <-
     strip.background = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    strip.text = element_text(face = "bold", color = "black"),
-    legend.text = element_text(face = "bold", color = "black"),
-    legend.title = element_text(face = "bold", color = "black"),
-    axis.text = element_text(color = "black")) +
+    strip.text = element_text(face = "bold", color = "black", size =14),
+    strip.text.y.left = element_text(angle = 0),
+    legend.text = element_text(face = "bold", color = "black", size =12),
+    legend.title = element_text(face = "bold", color = "black", size =12),
+    axis.text = element_text(color = "black", size =12)) +
   labs(fill = "Education groups")
+composed
 # --------------------------------------------------------- #
 # combine figures into 1
-ggarrange(
-  before,
-  after,
-  composed,
-  ncol = 3,
-  nrow = 1,
-  common.legend = TRUE,
-  legend = "bottom",
-  labels = c("education-specific decomposition", "total decomposition","total decomp, composed"),
-  vjust = 1
-)
+# ggarrange(
+#   before,
+#   after,
+#   composed,
+#   ncol = 3,
+#   nrow = 1,
+#   common.legend = TRUE,
+#   legend = "bottom",
+#   labels = c("education-specific decomposition", "total decomposition","total decomp, composed"),
+#   vjust = 1
+# )
 # ----------------------------------------------------------------------- #
 # combine figures into 1
 # ggarrange(
@@ -378,18 +383,28 @@ ggarrange(
 # )
 # ----------------------------------------------------------------------- #
 #margins are interesting:
+st_bind <-
+kit |> 
+  ungroup() |> 
+  summarize(margin = sum(st_component)) |> 
+  mutate(educ = "Educ. Composition", .before = 1)
+
 decomp_total |> 
   filter(year == "2016-2019") |> 
   group_by(educ) |> 
   summarize(margin = sum(result_rescaled)) |> 
+  bind_rows(st_bind) |> 
   mutate(educ = fct_relevel(educ, "Higher", after = Inf)) |> 
-  ggplot(aes(y = educ, 
-             x = margin,
-             fill = educ)) +
-  geom_col() +
+  ggplot(aes(x = educ, 
+             y = margin)) +
+  geom_col(fill ="#eb4034") +
   guides(color= "none") +
   theme_minimal() +
-  xlab("contribution to sex-gap")
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14)) +
+  ylab("contribution to sex-gap") +
+  xlab("") +
+  guides(fill = "none")
 
 decomp_total |> 
   filter(year == "2016-2019") |> 
@@ -404,9 +419,12 @@ decomp_total |>
   geom_col() +
   guides(color= "none") +
   theme_minimal() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14)) +
   scale_color_identity() +
   scale_fill_identity()+
-  xlab("contribution to sex-gap")
+  xlab("contribution to sex-gap") +
+  ylab("")
 # ----------------------------------------------------------------------- #
 # check gaps
 mort_gaps <- decomp_total |> 
@@ -450,49 +468,48 @@ tot_gps <- gaps %>%
 
 ed_gps %>% 
   full_join(tot_gps) %>%
-  ggplot(aes(x = educ, y = e35, fill = sex)) +
+  ggplot(aes(y = educ, x = e35, fill = sex)) +
   geom_col(position = position_dodge(), color = "white") +
   theme_bw() + 
   coord_flip()+
-  scale_y_continuous(breaks = pretty_breaks(n = 12)) +
+  scale_x_continuous(breaks = pretty_breaks(n = 12)) +
   scale_color_viridis_b() +
   theme(
     legend.position = "bottom",
-    axis.title = element_text(face = "bold", color = "black"),
+    axis.title = element_text(face = "bold", color = "black",size = 14),
     axis.text.y = element_text(face = "bold", color = "black"),
     strip.text = element_text(face = "bold", color = "black"),
     legend.text = element_text(face = "bold", color = "black"),
     legend.title = element_blank(),
-    axis.text = element_text(color = "black")) +
-  labs(fill = "Education groups") + 
-  labs(x = "Education level", y = "Age") + 
-  ggtitle("Life expectancy at the are of 35 by education group")
+    axis.text = element_text(color = "black",size = 12)) +
+  labs(x = "", y = "") + 
+  ggtitle("e35 by education group")
 # ----------------------------------------------------------------------- #
 # 2: make a plot comparing e35 stationary and non-stationary
 e35_total_compare %>% 
   filter(year == "2016-2019") %>%
-  mutate(type = "Non-stationary") %>%
+  mutate(type = "Aggregate") %>%
   rename(e35 = ex) %>% 
-  full_join(tot_gps) %>%
+  full_join(tot_gps,by = join_by(sex, year, e35)) %>%
   dplyr::select(-educ) %>% 
-  mutate(type = ifelse(is.na(type), "Stationary", type)) %>% 
+  mutate(type = ifelse(is.na(type), "Weighted by age 35 education", type)) %>% 
   ggplot(aes(x = sex, y = e35, fill = type)) +
   geom_col(position = position_dodge(), color = "white") +
   theme_bw() + 
-  coord_flip()+
   scale_y_continuous(breaks = pretty_breaks(n = 12)) +
   scale_color_viridis_b() +
   theme(
     legend.position = "bottom",
-    axis.title = element_text(face = "bold", color = "black"),
+    axis.title = element_text(face = "bold", color = "black", size = 14),
     axis.text.y = element_text(face = "bold", color = "black"),
     strip.text = element_text(face = "bold", color = "black"),
-    legend.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black", size = 12),
     legend.title = element_blank(),
-    axis.text = element_text(color = "black")) +
+    axis.text = element_text(color = "black", size =12)) +
   labs(fill = "Education groups") + 
   labs(x = "Education level", y = "Age") + 
-  ggtitle("Life expectancy at the age of 35 in stationary and non-stationary populations")
+  ggtitle("Total population e35 differences by weighting type") +
+  scale_fill_manual(values = c("#c99c4d","#c253b9"))
 # ----------------------------------------------------------------------- #
 # 3: make a plot of education-specific gaps and the stationary gap
 education <- e35_kit |> 
@@ -507,31 +524,30 @@ tot_gps <- gaps %>%
   mutate(educ = "Total") %>% 
   mutate(type = "Stationary")
 
-orig_gap <- e35_total_compare |> 
-  pivot_wider(names_from = sex, values_from = ex, names_prefix = "e35_") |> 
-  mutate(gap = e35_Females - e35_Males) %>% 
-  filter(year == "2016-2019") %>%
-  dplyr::select(year, gap) %>% 
-  mutate(type = "Non-Stationary") %>% 
-  mutate(educ = "Total") 
+# orig_gap <- e35_total_compare |> 
+#   pivot_wider(names_from = sex, values_from = ex, names_prefix = "e35_") |> 
+#   mutate(gap = e35_Females - e35_Males) %>% 
+#   filter(year == "2016-2019") %>%
+#   dplyr::select(year, gap) %>% 
+#   mutate(type = "Non-Stationary") %>% 
+#   mutate(educ = "Total") 
   
 education %>% 
   full_join(tot_gps) %>% 
-  full_join(orig_gap) %>% 
-  ggplot(aes(x = type, y = gap, fill = educ)) + 
+  # full_join(orig_gap) %>% 
+  ggplot(aes(x = educ, y = gap, fill = educ)) + 
   geom_col(position = position_dodge(), color = "white") + 
   theme_bw() + 
-  coord_flip()+
   scale_y_continuous(breaks = pretty_breaks(n = 12)) +
   scale_color_viridis_b() +
   theme(
     legend.position = "bottom",
-    axis.title = element_text(face = "bold", color = "black"),
+    axis.title = element_text(face = "bold", color = "black", size = 14),
     axis.text.y = element_text(face = "bold", color = "black"),
-    strip.text = element_text(face = "bold", color = "black"),
+    strip.text = element_text(face = "bold", color = "black", size = 14),
     legend.text = element_text(face = "bold", color = "black"),
     legend.title = element_blank(),
-    axis.text = element_text(color = "black")) +
+    axis.text = element_text(color = "black",size=12)) +
   labs(fill = "Education groupse") + 
   labs(x = "e(35) difference type", y = "Difference in years") + 
   ggtitle("The Female-Male diference in life expectancy at the age of 35 by education and population type")
