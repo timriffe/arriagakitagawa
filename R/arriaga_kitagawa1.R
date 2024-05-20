@@ -11,11 +11,10 @@ load("data/data_esp_1621.RData")
 
 # TR: these data prep/naming steps were repeated throughout, so i took care of them once 
 # at the start. And the name is indicative of what is in the file.
-data_5_prepped <-
-  data_esp_1621  |> 
+data_5_prepped <- data_esp_1621  |> 
   as_tibble() |> 
   # redundant category
-  filter(year  != "Total") |> 
+  filter(year  != "Total") |>
   rename(age = age5) |> 
   # turn age and year to numeric 
   mutate(age = parse_number(as.character(age)),
@@ -25,10 +24,10 @@ data_5_prepped <-
          year = as.factor(year),
          # combine secondary education into 1 
          educ = ifelse(str_detect(educ, "Secundaria"), "Secundaria", educ),
-         educ = case_when(educ == "Primaria" ~ "Primary",
+         educ = case_when(educ == "Primaria"   ~ "Primary",
                           educ == "Secundaria" ~ "Secondary",
-                          educ == "Superior" ~ "Higher",
-                          TRUE ~ "Total"),
+                          educ == "Superior"   ~ "Higher",
+                          TRUE                 ~ "Total"),
          causa = str_remove_all(causa, "^[:digit:]+. ")) |>
   group_by(sex, educ, year, cause = causa, age) |> 
   # add up data to match new periods and education groups
@@ -37,7 +36,7 @@ data_5_prepped <-
             .groups = "drop") 
 
 # ----------------------------------------------------------------------- #
-# I will use ths data further for predict() with GAM model results
+# I will use this data further for predict() with GAM model results
 new_data <- expand_grid(
   age  = seq(35, 100, 1),
   cause = unique(data_esp_1621$causa),
@@ -50,10 +49,10 @@ new_data <- expand_grid(
   # for model
   mutate(year = as.factor(year),
          educ = ifelse(str_detect(educ, "Secundaria"), "Secundaria", educ),
-         educ = case_when(educ == "Primaria" ~ "Primary",
-                          educ == "Secundaria" ~ "Secondary",
-                          educ == "Superior" ~ "Higher",
-                          TRUE ~ "Total"),
+         educ = case_when(educ == "Primaria"    ~ "Primary",
+                          educ == "Secundaria"  ~ "Secondary",
+                          educ == "Superior"    ~ "Higher",
+                          TRUE                  ~ "Total"),
          cause = str_remove_all(cause, "^[:digit:]+. ")) |>
   distinct()
 # ----------------------------------------------------------------------- #
@@ -99,12 +98,11 @@ mxc_single <- data_5_prepped |>
 # I modified the dx and Lx formulas below for easier handling. Note also
 # you had All among the causes, and that even if you had causes without
 # the total you would want to SUM rather than MEAN. Pipeline modified greatly.
-Lt <- 
-  mxc_single |>
+Lt <- mxc_single |>
   filter(cause == "All") |> 
   group_by(sex, year, educ) |>
   mutate(age = as.integer(age),
-         n  = if_else(age == 100,999,1),
+         n  = if_else(age == 100, 999, 1),
          ax = .5,
          qx = n * mx / (1 + (n - ax) * mx),
          qx = ifelse(n == 999, 1, qx),
@@ -116,8 +114,7 @@ Lt <-
   ungroup()
 
 # we compare this later with our weighted-average e35 values just to see.
-e35_total_compare <- 
-  Lt |>
+e35_total_compare <- Lt |>
   filter(educ == "Total", age == 35, sex != "Total") |> 
   select(sex, year, ex)
 
@@ -126,7 +123,7 @@ e35_total_compare <-
 mean_mx <- mxc_single |>
   filter(cause == "All",
          sex   != "Total",
-         educ != "Total") |>
+         educ  != "Total") |>
   group_by(educ, year, age) |> 
   summarise(mean_mx = mean(mx), .groups = "drop")
 
@@ -142,21 +139,19 @@ sensitivity_at_mean <- mean_mx |>
   unnest(data) |> 
   rename(sensitivity = value)
 # ----------------------------------------------------------------------- #
-# cause, age, year, and education specific diff of Males - Females 
+# cause, age, year, and education specific diff of  Females - Males 
 # multiplied by the results from sen_arriaga_instantaneous. This object
 # contains pairwise edu-specific decompositions.
-mxc_decomp <-
-  mxc_single |> 
+mxc_decomp <- mxc_single |> 
   filter(sex   != "Total", 
          cause != "All",
-         educ != "Total") |>
+         educ  != "Total") |>
   pivot_wider(names_from  = sex,
               values_from = mx) |> 
   mutate(mxc_diff = Females - Males) |> 
   full_join(sensitivity_at_mean, 
             by = join_by(educ, age, year)) |>
   mutate(result = mxc_diff * sensitivity) 
-
 # ----------------------------------------------------------------------- #
 # kitagawa part: ex by groups
 e35_kit <- Lt |>
@@ -178,10 +173,10 @@ e35_kit <- Lt |>
 struct_kit <- data_5_prepped |> 
   as_tibble() |>
   filter(year  != "Total",
-         sex  != "Total",
-         educ !="Total",
+         sex   != "Total",
+         educ  !="Total",
          cause == "All",
-         age == 35) |> 
+         age   == 35) |> 
   group_by(sex, educ, year) |> 
   summarise(deaths  = sum(deaths),
             pop     = sum(pop),
@@ -195,8 +190,8 @@ struct_kit <- data_5_prepped |>
   ungroup() |> 
   select(-pop) |> 
   group_by(educ, year)  |> 
-  pivot_wider(names_from = sex, 
-              values_from = prev, 
+  pivot_wider(names_from   = sex, 
+              values_from  = prev, 
               names_prefix = "st_") |> 
   mutate(st_diff = st_Females - st_Males,
          st_mean = (st_Females + st_Males) / 2) 
@@ -206,13 +201,12 @@ kit <- left_join(struct_kit,
                  e35_kit, 
                  by = join_by(educ, year)) |> 
   mutate(e35_component = st_mean * e35_diff,
-         st_component = e35_avg * st_diff)
+         st_component  = e35_avg * st_diff)
 
 # gaps
-gaps <- 
-  kit |> 
+gaps <- kit |> 
   group_by(year) |> 
-  summarize(e35_Males = sum(st_Males * e35_Males),
+  summarize(e35_Males   = sum(st_Males * e35_Males),
             e35_Females = sum(st_Females * e35_Females)) |> 
   mutate(gap = e35_Females - e35_Males)
 
@@ -224,16 +218,13 @@ e35_kit |>
   select(educ, year, e35_Females, e35_Males) |> 
   mutate(gap = e35_Females - e35_Males)
 # ----------------------------------------------------------------------- #
-
 # now take educ-specific arriaga full decompositions and weight them
 # according to Kitagawa e35 component
-decomp_total <-
-  kit |> 
+decomp_total <- kit |> 
   select(educ, year, e35_component) |> 
   right_join(mxc_decomp, by = join_by(educ, year)) |> 
   group_by(educ, year) |> 
   mutate(result_rescaled = result / sum(result) * e35_component)
-
 # ----------------------------------------------------------------------- #
 # separate figures for 2 periods
 before <-
@@ -318,7 +309,6 @@ after <-
     axis.text = element_text(color = "black")) +
   labs(fill = "Education groups")
 
-
 composed <-
   decomp_total |>
   filter(year == "2016-2019") |>
@@ -374,8 +364,6 @@ ggarrange(
   labels = c("education-specific decomposition", "total decomposition","total decomp, composed"),
   vjust = 1
 )
-
-
 # ----------------------------------------------------------------------- #
 # combine figures into 1
 # ggarrange(
@@ -388,9 +376,7 @@ ggarrange(
 #   labels = c("subgroup-specific", "total composition"),
 #   vjust = 1
 # )
-
 # ----------------------------------------------------------------------- #
-
 #margins are interesting:
 decomp_total |> 
   filter(year == "2016-2019") |> 
@@ -421,8 +407,7 @@ decomp_total |>
   scale_color_identity() +
   scale_fill_identity()+
   xlab("contribution to sex-gap")
-
-
+# ----------------------------------------------------------------------- #
 # check gaps
 mort_gaps <- decomp_total |> 
   group_by(year) |> 
@@ -447,19 +432,109 @@ non_stationary_gap <-
 e35_kit |> 
   select(educ, year, e35_Females, e35_Males) |> 
   mutate(gap = e35_Females - e35_Males) 
-
+# ----------------------------------------------------------------------- #
 # TODO:
 # 1: include Total from stationary 'gaps' in this plot on the right or left.
-e35_kit |> 
+ed_gps <- e35_kit |> 
   select(educ, year, Females = e35_Females, Males = e35_Males)  |>      
   pivot_longer(Females:Males, names_to = "sex", values_to = "e35") |> 
-  filter(year == "2016-2019") |> 
+  filter(year == "2016-2019")
+
+tot_gps <- gaps %>% 
+  filter(year == "2016-2019") %>% 
+  dplyr::select(year, Females = e35_Females, Males = e35_Males) %>% 
+  pivot_longer(-year,
+               names_to = "sex",
+               values_to = "e35") %>% 
+  mutate(educ = "Total")
+
+ed_gps %>% 
+  full_join(tot_gps) %>%
   ggplot(aes(x = educ, y = e35, fill = sex)) +
-  geom_col(position = position_dodge()) +
-  theme_minimal()
-
+  geom_col(position = position_dodge(), color = "white") +
+  theme_bw() + 
+  coord_flip()+
+  scale_y_continuous(breaks = pretty_breaks(n = 12)) +
+  scale_color_viridis_b() +
+  theme(
+    legend.position = "bottom",
+    axis.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(face = "bold", color = "black"),
+    strip.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_blank(),
+    axis.text = element_text(color = "black")) +
+  labs(fill = "Education groups") + 
+  labs(x = "Education level", y = "Age") + 
+  ggtitle("Life expectancy at the are of 35 by education group")
+# ----------------------------------------------------------------------- #
 # 2: make a plot comparing e35 stationary and non-stationary
-
+e35_total_compare %>% 
+  filter(year == "2016-2019") %>%
+  mutate(type = "Non-stationary") %>%
+  rename(e35 = ex) %>% 
+  full_join(tot_gps) %>%
+  dplyr::select(-educ) %>% 
+  mutate(type = ifelse(is.na(type), "Stationary", type)) %>% 
+  ggplot(aes(x = sex, y = e35, fill = type)) +
+  geom_col(position = position_dodge(), color = "white") +
+  theme_bw() + 
+  coord_flip()+
+  scale_y_continuous(breaks = pretty_breaks(n = 12)) +
+  scale_color_viridis_b() +
+  theme(
+    legend.position = "bottom",
+    axis.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(face = "bold", color = "black"),
+    strip.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_blank(),
+    axis.text = element_text(color = "black")) +
+  labs(fill = "Education groups") + 
+  labs(x = "Education level", y = "Age") + 
+  ggtitle("Life expectancy at the age of 35 in stationary and non-stationary populations")
+# ----------------------------------------------------------------------- #
 # 3: make a plot of education-specific gaps and the stationary gap
+education <- e35_kit |> 
+  select(educ, year, e35_diff)  |>
+  filter(year == "2016-2019") %>% 
+  mutate(type = "By education") %>% 
+  rename(gap = e35_diff)
 
+tot_gps <- gaps %>% 
+  filter(year == "2016-2019") %>% 
+  dplyr::select(year, gap) %>%
+  mutate(educ = "Total") %>% 
+  mutate(type = "Stationary")
+
+orig_gap <- e35_total_compare |> 
+  pivot_wider(names_from = sex, values_from = ex, names_prefix = "e35_") |> 
+  mutate(gap = e35_Females - e35_Males) %>% 
+  filter(year == "2016-2019") %>%
+  dplyr::select(year, gap) %>% 
+  mutate(type = "Non-Stationary") %>% 
+  mutate(educ = "Total") 
+  
+education %>% 
+  full_join(tot_gps) %>% 
+  full_join(orig_gap) %>% 
+  ggplot(aes(x = type, y = gap, fill = educ)) + 
+  geom_col(position = position_dodge(), color = "white") + 
+  theme_bw() + 
+  coord_flip()+
+  scale_y_continuous(breaks = pretty_breaks(n = 12)) +
+  scale_color_viridis_b() +
+  theme(
+    legend.position = "bottom",
+    axis.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(face = "bold", color = "black"),
+    strip.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_blank(),
+    axis.text = element_text(color = "black")) +
+  labs(fill = "Education groupse") + 
+  labs(x = "e(35) difference type", y = "Difference in years") + 
+  ggtitle("The Female-Male diference in life expectancy at the age of 35 by education and population type")
+# ----------------------------------------------------------------------- #
 # 4: copy all plots into a Google presentation, link to be shared by email.
+# ----------------------------------------------------------------------- #
