@@ -394,10 +394,13 @@ decomp_total |>
   group_by(educ) |> 
   summarize(margin = sum(result_rescaled)) |> 
   bind_rows(st_bind) |> 
+  mutate(color_comp = if_else(educ == "Educ. Composition","#a13b8e","#eb4034")) |> 
   mutate(educ = fct_relevel(educ, "Higher", after = Inf)) |> 
   ggplot(aes(x = educ, 
-             y = margin)) +
-  geom_col(fill ="#eb4034") +
+             y = margin,
+             fill = color_comp)) +
+  geom_col() +
+    scale_fill_identity()+
   guides(color= "none") +
   theme_minimal() +
   theme(axis.text = element_text(size = 12),
@@ -405,13 +408,15 @@ decomp_total |>
   ylab("contribution to sex-gap") +
   xlab("") +
   guides(fill = "none")
-
+st_tib <- tibble(cause = "Educ. Composition", margin = st_bind$margin)
 decomp_total |> 
   filter(year == "2016-2019") |> 
   group_by(cause) |> 
   summarize(margin = sum(result_rescaled)) |> 
+  bind_rows(st_tib) |> 
   filter(cause != "Covid-19") |> 
-  mutate(margin_sign = if_else(sign(margin) == 1, "#eb4034","#3483eb")) |> 
+  mutate(margin_sign = if_else(sign(margin) == 1, "#eb4034","#3483eb"),
+         margin_sign = if_else(cause == "Educ. Composition","#a13b8e",margin_sign)) |> 
   ggplot(aes(y = reorder(cause, margin), 
              x = margin, 
              color = margin_sign,
@@ -467,7 +472,12 @@ tot_gps <- gaps %>%
   mutate(educ = "Total")
 
 ed_gps %>% 
-  full_join(tot_gps) %>%
+  bind_rows(tot_gps) %>%
+  mutate(educ = as.factor(educ),
+         educ = relevel(educ, "Total"),
+         educ = relevel(educ, "Primary"),
+         educ = relevel(educ, "Secondary"),
+         educ = relevel(educ, "Higher")) |> 
   ggplot(aes(y = educ, x = e35, fill = sex)) +
   geom_col(position = position_dodge(), color = "white") +
   theme_bw() + 
@@ -482,8 +492,7 @@ ed_gps %>%
     legend.text = element_text(face = "bold", color = "black"),
     legend.title = element_blank(),
     axis.text = element_text(color = "black",size = 12)) +
-  labs(x = "", y = "") + 
-  ggtitle("e35 by education group")
+  labs(x = "", y = "")
 # ----------------------------------------------------------------------- #
 # 2: make a plot comparing e35 stationary and non-stationary
 e35_total_compare %>% 
@@ -507,8 +516,7 @@ e35_total_compare %>%
     legend.title = element_blank(),
     axis.text = element_text(color = "black", size =12)) +
   labs(fill = "Education groups") + 
-  labs(x = "Education level", y = "Age") + 
-  ggtitle("Total population e35 differences by weighting type") +
+  labs(x = "", y = "e35") + 
   scale_fill_manual(values = c("#c99c4d","#c253b9"))
 # ----------------------------------------------------------------------- #
 # 3: make a plot of education-specific gaps and the stationary gap
@@ -533,7 +541,13 @@ tot_gps <- gaps %>%
 #   mutate(educ = "Total") 
   
 education %>% 
-  full_join(tot_gps) %>% 
+  bind_rows(tot_gps) %>% 
+  mutate(
+    educ = as.factor(educ),
+    educ = relevel(educ, "Total"),
+    educ = relevel(educ, "Primary"),
+    educ = relevel(educ, "Secondary"),
+    educ = relevel(educ, "Higher")) |> 
   # full_join(orig_gap) %>% 
   ggplot(aes(x = educ, y = gap, fill = educ)) + 
   geom_col(position = position_dodge(), color = "white") + 
@@ -548,9 +562,43 @@ education %>%
     legend.text = element_text(face = "bold", color = "black"),
     legend.title = element_blank(),
     axis.text = element_text(color = "black",size=12)) +
-  labs(fill = "Education groupse") + 
-  labs(x = "e(35) difference type", y = "Difference in years") + 
-  ggtitle("The Female-Male diference in life expectancy at the age of 35 by education and population type")
+  labs(fill = "Education groups") +
+  labs(x="")+
+  guides(fill = "none")
+
 # ----------------------------------------------------------------------- #
 # 4: copy all plots into a Google presentation, link to be shared by email.
 # ----------------------------------------------------------------------- #
+
+mxc_single |> 
+  filter(cause == "All",
+         year == "2016-2019",
+         educ == "Total") |> 
+  pivot_wider(names_from = sex, values_from = mx) |> 
+  mutate(`M vs F` = arriaga(Males, Females),
+         `F vs M` = -arriaga(Females, Males)) |> 
+  select(age, `M vs F`, `F vs M`) |> 
+  pivot_longer(-age, names_to = "Arriaga\ndirection",values_to = "result") |> 
+  ggplot(aes(x = age, y = result, color = `Arriaga\ndirection`)) +
+  geom_line(linewidth = 2) +
+  theme_minimal() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14))
+
+arriaga
+
+kit |> 
+  ungroup() |> 
+  filter(year == "2016-2019") |> 
+  select(educ, Females = st_Females, Males = st_Males) |> 
+  pivot_longer(-educ, names_to = "sex", values_to = "Educ. Composition") |> 
+  mutate(
+    educ = as.factor(educ),
+    educ = relevel(educ,"Secondary"),
+    educ = relevel(educ,"Primary")) |> 
+  ggplot(aes(x=sex,y=`Educ. Composition`,fill=educ)) +
+  geom_col() +
+  theme_minimal() +
+  theme(axis.text = element_text(size=12),
+        axis.title = element_text(size = 14)) +
+  xlab("")
