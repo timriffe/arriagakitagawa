@@ -5,13 +5,14 @@ library(ggridges)
 library(scales)
 library(ggpubr)
 library(mgcv)
+library(xtable)
 # ----------------------------------------------------------------------- #
 # data from Sergi
 load("data/data_esp_1621.RData")
 
 # TR: these data prep/naming steps were repeated throughout, so i took care of them once 
 # at the start. And the name is indicative of what is in the file.
-data_5_prepped <- data_esp_1621  |> 
+data_5_prepped <- data_esp_1621  |>
   as_tibble() |> 
   # redundant category
   filter(year  != "Total") |>
@@ -92,79 +93,78 @@ mxc_single <- data_5_prepped |>
   rename(mx = new)
 # ----------------------------------------------------------------------- #
 # calculate life expectancy
-
 # TR: note, we have DemoTools installed already, so could just call 
 # DemoTools::lt_single_mx(), which will handle closeouts more cleanly.
 # I modified the dx and Lx formulas below for easier handling. Note also
 # you had All among the causes, and that even if you had causes without
 # the total you would want to SUM rather than MEAN. Pipeline modified greatly.
+
 Lt <- mxc_single |>
   filter(cause == "All") |> 
   group_by(sex, year, educ) |>
-  mutate(age = as.integer(age),
-         n  = if_else(age == 100, 999, 1),
-         ax = .5,
-         qx = n * mx / (1 + (n - ax) * mx),
-         qx = ifelse(n == 999, 1, qx),
-         lx = DemoTools::lt_id_q_l(qx, radix = 1),
-         dx = lx * qx,
-         Lx = lx - (1 - ax) * dx,
-         Tx = rev(cumsum(rev(Lx))),
-         ex = Tx / lx) |> 
-  ungroup()
+  mutate(age = as.integer(age)) %>%
+  group_by(sex, educ, cause, year) %>% 
+  summarise(ex = mx_to_e0(mx, age = age), .groups = "drop")
 
 # we compare this later with our weighted-average e35 values just to see.
 e35_total_compare <- Lt |>
-  filter(educ == "Total", age == 35, sex != "Total") |> 
+  filter(educ == "Total", sex != "Total") |> 
   select(sex, year, ex)
-
 # ----------------------------------------------------------------------- #
 # Average male and female overall mortality for each age, year and educ
-mean_mx <- mxc_single |>
+averages <- mxc_single %>%
   filter(cause == "All",
          sex   != "Total",
-         educ  != "Total") |>
-  group_by(educ, year, age) |> 
-  summarise(mean_mx = mean(mx), .groups = "drop")
+         educ  != "Total") %>%
+  mutate(year = as.character(year),
+         age = as.integer(age)) %>% 
+  dplyr::select(-cause) %>%
+  pivot_wider(names_from = sex,
+              values_from = mx) %>% 
+  group_nest(educ, year) %>% 
+  mutate(data = map(data, ~ 
+                      sen_arriaga_sym(mx1 = .x$Males,
+                                      mx =  .x$Females,
+                                      age = .x$age,
+                                      closeout = T))) %>% 
+  unnest(data) %>% 
+  group_by(educ, year) %>% 
+  mutate(age = 35:100) %>% 
+  ungroup() %>% 
+  rename(sensitivity = data)
 
-# ----------------------------------------------------------------------- #
-# feed the averages to the corresponding sensitivity function
-sensitivity_at_mean <- mean_mx |> 
-  group_nest(educ, year) |> 
-  mutate(data = map(data, ~ .x |>
-                      pull(mean_mx) |> 
-                      sen_arriaga_instantaneous() |> 
-                      as_tibble() |> 
-                      mutate(age = 35:100))) |> 
-  unnest(data) |> 
-  rename(sensitivity = value)
+take arriaga sym and multiply by age specific delta by education group e0
+
+any subset with age specific mortality and calculate tge e1071::diff rates take sym and then sumproduct of sym and delta the difference
+mx1 with lower e0 and mx2 will be females
+total non st
+total st_bind
+
 # ----------------------------------------------------------------------- #
 # cause, age, year, and education specific diff of  Females - Males 
 # multiplied by the results from sen_arriaga_instantaneous. This object
 # contains pairwise edu-specific decompositions.
-mxc_decomp <- mxc_single |> 
-  filter(sex   != "Total", 
+mxc_decomp <- mxc_single |>
+  filter(sex   != "Total",
          cause != "All",
          educ  != "Total") |>
   pivot_wider(names_from  = sex,
               values_from = mx) |> 
   mutate(mxc_diff = Females - Males) |> 
-  full_join(sensitivity_at_mean, 
+  full_join(averages, 
             by = join_by(educ, age, year)) |>
-  mutate(result = mxc_diff * sensitivity) 
+  mutate(result = mxc_diff * sensitivity)
 # ----------------------------------------------------------------------- #
 # kitagawa part: ex by groups
 e35_kit <- Lt |>
   filter(sex  != "Total",
-         educ !="Total",
-         age == 35) |> 
+         educ !="Total") |> 
   dplyr::select(sex, educ, year, ex) |> 
   pivot_wider(names_from = sex, 
               values_from = ex, 
               names_prefix = "e35_") |> 
   mutate(e35_diff = e35_Females - e35_Males,
          e35_avg = (e35_Females + e35_Males) / 2)
-  
 # ----------------------------------------------------------------------- #
 # population prevalence data from original source
 # mostly data cleaning similar to step 1.
@@ -202,6 +202,8 @@ kit <- left_join(struct_kit,
                  by = join_by(educ, year)) |> 
   mutate(e35_component = st_mean * e35_diff,
          st_component  = e35_avg * st_diff)
+
+# sum st. component
 
 # gaps
 gaps <- kit |> 
@@ -309,6 +311,79 @@ after <-
     axis.text = element_text(color = "black")) +
   labs(fill = "Education groups")
 
+st_gaps <- kit |> 
+  group_by(year) |> 
+  summarize(cc_str = sum(st_component))
+
+tot_gps <- gaps %>% 
+  filter(year == "2016-2019") %>% 
+  dplyr::select(year, Females = e35_Females, Males = e35_Males) %>% 
+  pivot_longer(-year,
+               names_to = "sex",
+               values_to = "e35") %>% 
+  mutate(educ = "Total")
+
+ed_gps <- e35_kit |> 
+  select(educ, year, Females = e35_Females, Males = e35_Males)  |>      
+  pivot_longer(Females:Males, names_to = "sex", values_to = "e35") |> 
+  filter(year == "2016-2019")
+
+tot_gps <- gaps %>% 
+  filter(year == "2016-2019") %>% 
+  dplyr::select(year, Females = e35_Females, Males = e35_Males) %>% 
+  pivot_longer(-year,
+               names_to = "sex",
+               values_to = "e35") %>% 
+  mutate(educ = "Total")
+
+
+mort_gaps <- decomp_total |> 
+  group_by(year) |> 
+  summarize(cc_mort = sum(result_rescaled))
+
+
+dec_gaps <- full_join(mort_gaps, st_gaps, by = join_by(year)) |> 
+  mutate(dec_gap = cc_str + cc_mort)
+
+ed_gps %>% 
+  bind_rows(tot_gps) %>%
+  mutate(educ = as.factor(educ),
+         educ = relevel(educ, "Total"),
+         educ = relevel(educ, "Primary"),
+         educ = relevel(educ, "Secondary"),
+         educ = relevel(educ, "Higher")) |> 
+  ggplot(aes(y = educ, x = e35, fill = sex)) +
+  geom_col(position = position_dodge(), color = "white") +
+  theme_bw() + 
+  coord_flip()+
+  scale_x_continuous(breaks = pretty_breaks(n = 12)) +
+  scale_color_viridis_b() +
+  theme(
+    legend.position = "bottom",
+    axis.title = element_text(face = "bold", color = "black",size = 14),
+    axis.text.y = element_text(face = "bold", color = "black"),
+    strip.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_blank(),
+    axis.text = element_text(color = "black",size = 12)) +
+  labs(x = "", y = "")
+
+mxc_single |> 
+  filter(cause == "All",
+         year == "2016-2019",
+         educ == "Total") |> 
+  pivot_wider(names_from = sex, values_from = mx) |> 
+  mutate(`M vs F` = arriaga(Males, Females),
+         `F vs M` = -arriaga(Females, Males)) |> 
+  select(age, `M vs F`, `F vs M`) |> 
+  pivot_longer(-age, names_to = "Arriaga\ndirection",values_to = "result") |> 
+  ggplot(aes(x = age, y = result, color = `Arriaga\ndirection`)) +
+  geom_line(linewidth = 2) +
+  theme_minimal() +
+  theme(axis.text = element_text(size = 12),
+        axis.title = element_text(size = 14))
+
+
 composed <-
   decomp_total |>
   filter(year == "2016-2019") |>
@@ -377,11 +452,27 @@ ggarrange(
 #   vjust = 1
 # )
 # ----------------------------------------------------------------------- #
-#margins are interesting:
+# margins are interesting:
+
+
+st_bind <- kit |> 
+  ungroup() |> 
+  summarize(margin = sum(st_component)) |> 
+  mutate(educ = "Educ. Composition", .before = 1)
+
+# educational component
+# the one with causes and component
+# change the figure with stack
+# say in caption that we decompose the stationary
+# sum st component for education
+# figure with aggregate and weighted we decompose the purple
+
 decomp_total |> 
   filter(year == "2016-2019") |> 
   group_by(educ) |> 
-  summarize(margin = sum(result_rescaled)) |> 
+  summarize(margin = sum(result_rescaled)) |>
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) %>% 
+              mutate(educ = "Educ. component")) %>%
   mutate(educ = fct_relevel(educ, "Higher", after = Inf)) |> 
   ggplot(aes(y = educ, 
              x = margin,
@@ -389,14 +480,30 @@ decomp_total |>
   geom_col() +
   guides(color= "none") +
   theme_minimal() +
-  xlab("contribution to sex-gap")
+  xlab("Contribution to sex-gap")+
+  scale_x_continuous(breaks = pretty_breaks())+
+  xlab("Contribution to sex-gap") + 
+    ylab("Education") +
+  theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    strip.background = element_blank(),
+    strip.text =element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(color = "black", face = "bold"),
+    axis.text.x = element_text(color = "black"))
+
 
 decomp_total |> 
   filter(year == "2016-2019") |> 
   group_by(cause) |> 
   summarize(margin = sum(result_rescaled)) |> 
   filter(cause != "Covid-19") |> 
-  mutate(margin_sign = if_else(sign(margin) == 1, "#eb4034","#3483eb")) |> 
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) %>% 
+              mutate(cause = "Educ. component")) %>% 
+  mutate(margin_sign = if_else(sign(margin) == 1, "#eb4034","#3483eb")) |>
+  mutate(margin_sign = if_else(cause == "Educ. component", "#BF2C34", margin_sign)) |>
   ggplot(aes(y = reorder(cause, margin), 
              x = margin, 
              color = margin_sign,
@@ -513,14 +620,14 @@ orig_gap <- e35_total_compare |>
   filter(year == "2016-2019") %>%
   dplyr::select(year, gap) %>% 
   mutate(type = "Non-Stationary") %>% 
-  mutate(educ = "Total") 
+  mutate(educ = "Total")
   
 education %>% 
   full_join(tot_gps) %>% 
   full_join(orig_gap) %>% 
   ggplot(aes(x = type, y = gap, fill = educ)) + 
   geom_col(position = position_dodge(), color = "white") + 
-  theme_bw() + 
+  theme_minimal() + 
   coord_flip()+
   scale_y_continuous(breaks = pretty_breaks(n = 12)) +
   scale_color_viridis_b() +
@@ -532,8 +639,9 @@ education %>%
     legend.text = element_text(face = "bold", color = "black"),
     legend.title = element_blank(),
     axis.text = element_text(color = "black")) +
-  labs(fill = "Education groupse") + 
-  labs(x = "e(35) difference type", y = "Difference in years") + 
+  labs(fill = "Education groupse") +
+  labs(x = "e(35) difference type", 
+       y = "Difference in years") + 
   ggtitle("The Female-Male diference in life expectancy at the age of 35 by education and population type")
 # ----------------------------------------------------------------------- #
 # 4: copy all plots into a Google presentation, link to be shared by email.
