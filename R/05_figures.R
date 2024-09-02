@@ -1,11 +1,11 @@
-source("00_initial_data_preparation.R")
-source("01_smoothing_and_ungroupping.R")
-source("03_LT_and_average_quantities.R")
-source("04_decomposition_results.R")
-source("05_gaps.R")
+source("R/00_initial_data_preparation.R")
+source("R/01_smoothing_and_ungroupping.R")
+source("R/02_LT_and_average_quantities.R")
+source("R/03_decomposition_results.R")
+source("R/04_gaps.R")
 
 # table
-mxc_decomp %>% 
+mxc_decomp %>%
   group_by(educ, year) %>%
   summarise(decomp = sum(result)) %>% 
   full_join(struct_kit) %>%
@@ -119,7 +119,8 @@ decomp_total |>
   facet_grid(rows = vars(cause), switch = "y") +
   theme_minimal() +
   scale_x_continuous(breaks = pretty_breaks(n = 8)) +
-  scale_color_viridis_b() +
+  scale_fill_manual(values = c("#e86bf3", "#00b0f6", "#00bf7c")) +
+  coord_flip()+
   theme(
     legend.position = "bottom",
     axis.title = element_blank(),
@@ -132,14 +133,18 @@ decomp_total |>
     axis.text = element_text(color = "black")) +
   labs(fill = "Education groups")
 
+
+
 # education gaps
-decomp_total |> 
-  filter(year == "2016-2019") |> 
+decomp_total |>
+  filter(year == "2016-2019") |>
   group_by(educ) |> 
   summarize(margin = sum(result_rescaled)) |>
-  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) %>% 
-              mutate(educ = "Educ. component")) %>%
-  mutate(educ = fct_relevel(educ, "Higher", after = Inf)) |> 
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) |> 
+              mutate(educ = "Educ. component")) |>
+  mutate(educ = factor(educ, levels = c("Educ. component", 
+                                        "Higher", "Secondary", 
+                                        "Primary"))) |>  
   ggplot(aes(y = educ, 
              x = margin,
              fill = educ)) +
@@ -148,7 +153,7 @@ decomp_total |>
   theme_minimal() +
   xlab("Contribution to sex-gap")+
   scale_x_continuous(breaks = pretty_breaks())+
-  scale_fill_manual(values = c("#F8766D", "#C77CFF", "#00BFC4", "#7CAE00"))+
+  scale_fill_manual(values = c("#F8766D", "#00bf7c", "#00b0f6", "#e86bf3"))+
   xlab("Contribution to sex-gap") + 
   ylab("Education") +
   theme(

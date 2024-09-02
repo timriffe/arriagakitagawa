@@ -1,7 +1,7 @@
-source("00_initial_data_preparation.R")
-source("01_smoothing_and_ungroupping.R")
-source("03_LT_and_average_quantities.R")
-source("04_decomposition_results.R")
+source("R/00_initial_data_preparation.R")
+source("R/01_smoothing_and_ungroupping.R")
+source("R/02_LT_and_average_quantities.R")
+source("R/03_decomposition_results.R")
 # gaps
 gaps <- kit |> 
   group_by(year) |> 
@@ -64,4 +64,5 @@ orig_gap <- e35_total_compare |>
   mutate(type = "Non-Stationary") |> 
   mutate(educ = "Total")
 
-st_tib <- tibble(cause = "Educ. Composition", margin = st_bind$margin)
+st_tib <- tibble(cause  = "Educ. Composition", 
+                 margin = st_bind$margin)
