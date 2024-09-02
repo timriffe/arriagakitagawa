@@ -61,6 +61,41 @@ decomp_total |>
     axis.text.y = element_text(color = "black", face = "bold"),
     axis.text.x = element_text(color = "black"))
 
+
+# causes post covid
+decomp_total |> 
+  filter(year != "2016-2019") |> 
+  group_by(cause) |> 
+  summarize(margin = sum(result_rescaled)) |> 
+  filter(cause != "Covid-19") |> 
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) %>% 
+              mutate(cause = "Educ. component")) %>% 
+  mutate(margin_sign = if_else(sign(margin) == 1, "#F8766D","#C77CFF")) |>
+  mutate(margin_sign = if_else(cause == "Educ. component", "#00BFC4", margin_sign)) %>% 
+  ggplot(aes(y = reorder(cause, margin), 
+             x = margin, 
+             color = margin_sign,
+             fill = margin_sign)) +
+  geom_col() +
+  guides(color= "none") +
+  theme_minimal() +
+  scale_color_identity() +
+  scale_fill_identity() +
+  scale_x_continuous(breaks = pretty_breaks())+
+  xlab("Contribution to sex-gap") + 
+  theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    strip.background = element_blank(),
+    strip.text =element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(color = "black", face = "bold"),
+    axis.text.x = element_text(color = "black"))
+
+
+
+
 # education | Stationary, non-stationary
 education %>% 
   full_join(tot_gps) %>% 
@@ -104,7 +139,7 @@ decomp_total |>
   )) |>
   group_by(educ, year, cause, age) |>
   summarise(valuersc = sum(result_rescaled), 
-            value = sum(result),.groups = "drop") |>
+            value = sum(result), .groups = "drop") |>
   mutate(cause = factor(cause),
          cause = reorder(cause, -valuersc)) |>
   mutate(
@@ -116,28 +151,109 @@ decomp_total |>
                color = "white",
                position = "stack",
                linewidth = .25) +
-  facet_grid(rows = vars(cause), switch = "y") +
+  facet_grid(rows = vars(cause), switch = "y", labeller = label_value) +
   theme_minimal() +
   scale_x_continuous(breaks = pretty_breaks(n = 8)) +
   scale_fill_manual(values = c("#e86bf3", "#00b0f6", "#00bf7c")) +
-  coord_flip()+
+  coord_flip() +
   theme(
     legend.position = "bottom",
     axis.title = element_blank(),
     strip.background = element_blank(),
     axis.text.y = element_blank(),
     axis.ticks.y = element_blank(),
-    strip.text = element_text(face = "bold", color = "black"),
+    strip.text.x = element_text(face = "bold", color = "black"),
+    strip.text.y.left = element_text(face = "bold", color = "black", angle = 0, hjust = 0),  # Set angle to 0 and adjust hjust
     legend.text = element_text(face = "bold", color = "black"),
     legend.title = element_text(face = "bold", color = "black"),
-    axis.text = element_text(color = "black")) +
-  labs(fill = "Education groups")
+    axis.text = element_text(color = "black")
+  ) +
+  labs(fill = "Education groups") 
 
 
+# composed figure post covid
+
+decomp_total |>
+  filter(year != "2016-2019") |>
+  mutate(cause = case_when(
+    !cause %in% c(
+      "External",
+      "Circulatory",
+      "Digestive",
+      "Neoplasms",
+      "Respiratory"
+    ) ~ "Other",
+    TRUE ~ cause
+  )) |>
+  group_by(educ, year, cause, age) |>
+  summarise(valuersc = sum(result_rescaled), 
+            value = sum(result), .groups = "drop") |>
+  mutate(cause = factor(cause),
+         cause = reorder(cause, -valuersc)) |>
+  mutate(
+    educ = as.factor(educ),
+    educ = fct_relevel(educ, "Higher", after = Inf)) |> 
+  ggplot(aes(x = age, y = valuersc, fill = educ)) +
+  geom_density(stat = "identity",
+               alpha = 0.8,
+               color = "white",
+               position = "stack",
+               linewidth = .25) +
+  facet_grid(rows = vars(cause), switch = "y", labeller = label_value) +
+  theme_minimal() +
+  scale_x_continuous(breaks = pretty_breaks(n = 8)) +
+  scale_fill_manual(values = c("#e86bf3", "#00b0f6", "#00bf7c")) +
+  coord_flip() +
+  theme(
+    legend.position = "bottom",
+    axis.title = element_blank(),
+    strip.background = element_blank(),
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    strip.text.x = element_text(face = "bold", color = "black"),
+    strip.text.y.left = element_text(face = "bold", color = "black", angle = 0, hjust = 0),  # Set angle to 0 and adjust hjust
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_text(face = "bold", color = "black"),
+    axis.text = element_text(color = "black")
+  ) +
+  labs(fill = "Education groups") 
 
 # education gaps
 decomp_total |>
   filter(year == "2016-2019") |>
+  group_by(educ) |> 
+  summarize(margin = sum(result_rescaled)) |>
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) |> 
+              mutate(educ = "Educ. component")) |>
+  mutate(educ = factor(educ, levels = c("Educ. component", 
+                                        "Higher", "Secondary", 
+                                        "Primary"))) |>  
+  ggplot(aes(y = educ, 
+             x = margin,
+             fill = educ)) +
+  geom_col() +
+  guides(color= "none") +
+  theme_minimal() +
+  xlab("Contribution to sex-gap")+
+  scale_x_continuous(breaks = pretty_breaks())+
+  scale_fill_manual(values = c("#F8766D", "#00bf7c", "#00b0f6", "#e86bf3"))+
+  xlab("Contribution to sex-gap") + 
+  ylab("Education") +
+  theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    strip.background = element_blank(),
+    strip.text =element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(color = "black", face = "bold"),
+    axis.text.x = element_text(color = "black"))
+
+
+# education gaps post covid
+
+decomp_total |>
+  filter(year != "2016-2019") |>
   group_by(educ) |> 
   summarize(margin = sum(result_rescaled)) |>
   full_join(dplyr::select(st_gaps[1, ], margin = cc_str) |> 
