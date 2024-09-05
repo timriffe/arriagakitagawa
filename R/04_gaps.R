@@ -24,10 +24,12 @@ ed_gps <- e35_kit |>
 #   filter(year == "2016-2019")
 
 # table
-# decomp_total |>
-#   group_by(year, educ) |>
-#   summarize(cc_mort = sum(result_rescaled)) |>
-#   filter(year == "2016-2019")
+decomp_total |>
+  group_by(year, educ) |>
+  summarize(cc_mort = sum(result_rescaled)) %>%
+  filter(year == "2016-2019") %>%
+  pull(cc_mort) %>%
+  sum()
 
 mort_gaps <- decomp_total |> 
   group_by(year) |> 
