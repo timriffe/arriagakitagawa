@@ -1,5 +1,5 @@
-source("R/00_initial_data_preparation.R")
-source("R/01_smoothing_and_ungroupping.R")
+# source("R/00_initial_data_preparation.R")
+# source("R/01_smoothing_and_ungroupping.R")
 source("R/02_LT_and_average_quantities.R")
 
 mxc_decomp <- mxc_single |>
@@ -25,29 +25,40 @@ e35_kit <- Lt |>
          e35_avg = (e35_Females + e35_Males) / 2)
 # ----------------------------------------------------------------------- #
 # population prevalence data from original source
-struct_kit <- data_5_prepped |> 
-  as_tibble() |>
-  filter(year  != "Total",
-         sex   != "Total",
-         educ  !="Total",
-         cause == "All",
-         age   == 35) |> 
-  group_by(sex, educ, year) |> 
-  summarise(deaths  = sum(deaths),
-            pop     = sum(pop),
-            .groups = "drop") |> 
-  group_by(sex, educ, year) |> 
-  # population by groups
-  summarise(pop = sum(pop), .groups = "drop") |> 
-  group_by(sex, year) |>
-  # scale population
-  mutate(prev = pop / sum(pop)) |> 
-  ungroup() |> 
-  select(-pop) |> 
-  group_by(educ, year)  |> 
-  pivot_wider(names_from   = sex, 
-              values_from  = prev, 
-              names_prefix = "st_") |> 
+if (exists(data_5_prepped)){
+  prev <- data_5_prepped |> 
+    as_tibble() |>
+    filter(year  != "Total",
+           sex   != "Total",
+           educ  !="Total",
+           cause == "All",
+           age   == 35) |> 
+    group_by(sex, educ, year) |> 
+    summarise(deaths  = sum(deaths),
+              pop     = sum(pop),
+              .groups = "drop") |> 
+    group_by(sex, educ, year) |> 
+    # population by groups
+    summarise(pop = sum(pop), .groups = "drop") |> 
+    group_by(sex, year) |>
+    # scale population
+    mutate(prev = pop / sum(pop)) |> 
+    ungroup() |> 
+    select(-pop) |> 
+    group_by(educ, year)  |> 
+    pivot_wider(names_from   = sex, 
+                values_from  = prev, 
+                names_prefix = "st_") 
+
+  prev |> 
+    write_csv("data/prev.csv")
+} else {
+  # otherwise read in the last one saved (also committed)
+  prev <- read_csv("data/prev.csv")
+}
+
+struct_kit <-
+  prev |> 
   mutate(st_diff = st_Females - st_Males,
          st_mean = (st_Females + st_Males) / 2) 
 # ----------------------------------------------------------------------- #

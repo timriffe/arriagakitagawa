@@ -47,3 +47,6 @@ mxc_single <- data_5_prepped |>
                       smooth_ungroup(.x, new_data = new_data)
   )) |> 
   unnest(data)
+
+
+write_csv(mxc_single,"data/mxc_single.csv")

@@ -1,5 +1,5 @@
-source("R/00_initial_data_preparation.R")
-source("R/01_smoothing_and_ungroupping.R")
+# source("R/00_initial_data_preparation.R")
+# source("R/01_smoothing_and_ungroupping.R")
 source("R/02_LT_and_average_quantities.R")
 source("R/03_decomposition_results.R")
 # gaps

@@ -1,6 +1,14 @@
-source("R/00_initial_data_preparation.R")
-source("R/01_smoothing_and_ungroupping.R")
+# source("R/00_initial_data_preparation.R")
+# source("R/01_smoothing_and_ungroupping.R")
+library(tidyverse)
+library(coddecomp)
+library(ggridges)
+library(xtable)
+library(scales)
+library(ggpubr)
+library(mgcv)
 
+mxc_single <- read_csv("data/mxc_single.csv")
 # LT and basic quantities
 Lt <- mxc_single |>
   filter(cause == "All") |> 
