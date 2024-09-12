@@ -28,9 +28,14 @@ data_5_prepped <- data_esp_1621  |>
                           educ == "Secundaria" ~ "Secondary",
                           educ == "Superior"   ~ "Higher",
                           TRUE                 ~ "Total"),
-         causa = str_remove_all(causa, "^[:digit:]+. ")) |>
+         causa = str_remove_all(causa, "^[:digit:]+. "))|>
   group_by(sex, educ, year, cause = causa, age) |> 
   # add up data to match new periods and education groups
   summarise(deaths  = sum(deaths),
             pop     = sum(pop),
-            .groups = "drop")
+            .groups = "drop") |> 
+  mutate(cause = ifelse(cause ==  "Other diseases", "Congenital",
+                        cause),
+         cause = ifelse(cause ==  "Other minor causes", 
+                        "Other diseases", cause)
+         )

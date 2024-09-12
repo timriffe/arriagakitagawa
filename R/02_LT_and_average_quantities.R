@@ -1,7 +1,7 @@
-source("00_initial_data_preparation.R")
-source("01_smoothing_and_ungroupping.R")
+source("R/00_initial_data_preparation.R")
+source("R/01_smoothing_and_ungroupping.R")
 
-# LT abd basic quantities
+# LT and basic quantities
 Lt <- mxc_single |>
   filter(cause == "All") |> 
   group_by(sex, year, educ) |>

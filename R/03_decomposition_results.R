@@ -1,6 +1,6 @@
-source("00_initial_data_preparation.R")
-source("01_smoothing_and_ungroupping.R")
-source("03_LT_and_average_quantities.R")
+source("R/00_initial_data_preparation.R")
+source("R/01_smoothing_and_ungroupping.R")
+source("R/02_LT_and_average_quantities.R")
 
 mxc_decomp <- mxc_single |>
   filter(sex   != "Total",
@@ -11,9 +11,9 @@ mxc_decomp <- mxc_single |>
   mutate(mxc_diff = Females - Males) |> 
   full_join(averages, 
             by = join_by(educ, age, year)) |>
-  mutate(result = mxc_diff * sensitivity)
+  mutate(result = mxc_diff * sensitivity) # 13, sens 12
 # ----------------------------------------------------------------------- #
-# kitagawa part: ex by groups
+# Kitagawa part: ex by groups
 e35_kit <- Lt |>
   filter(sex  != "Total",
          educ !="Total") |> 
@@ -25,9 +25,6 @@ e35_kit <- Lt |>
          e35_avg = (e35_Females + e35_Males) / 2)
 # ----------------------------------------------------------------------- #
 # population prevalence data from original source
-# mostly data cleaning similar to step 1.
-# TR: I needed to make many changes here; we want prevalence
-# at age 35-39, specifically, and causes play no role.
 struct_kit <- data_5_prepped |> 
   as_tibble() |>
   filter(year  != "Total",
@@ -43,7 +40,7 @@ struct_kit <- data_5_prepped |>
   # population by groups
   summarise(pop = sum(pop), .groups = "drop") |> 
   group_by(sex, year) |>
-  # scale populaton
+  # scale population
   mutate(prev = pop / sum(pop)) |> 
   ungroup() |> 
   select(-pop) |> 
@@ -58,8 +55,8 @@ struct_kit <- data_5_prepped |>
 kit <- left_join(struct_kit, 
                  e35_kit, 
                  by = join_by(educ, year)) |> 
-  mutate(e35_component = st_mean * e35_diff,
-         st_component  = e35_avg * st_diff)
+  mutate(e35_component = st_mean * e35_diff, #5 ############
+         st_component  = e35_avg * st_diff) #3
 
 decomp_total <- kit |> 
   select(educ, year, e35_component) |> 
