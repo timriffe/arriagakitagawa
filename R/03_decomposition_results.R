@@ -55,8 +55,8 @@ struct_kit <- data_5_prepped |>
 kit <- left_join(struct_kit, 
                  e35_kit, 
                  by = join_by(educ, year)) |> 
-  mutate(e35_component = st_mean * e35_diff, #5 ############
-         st_component  = e35_avg * st_diff) #3
+  mutate(e35_component = st_mean * e35_diff,
+         st_component  = e35_avg * st_diff)
 
 decomp_total <- kit |> 
   select(educ, year, e35_component) |> 

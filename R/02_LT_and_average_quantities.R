@@ -9,7 +9,7 @@ Lt <- mxc_single |>
   group_by(sex, educ, cause, year) |>  
   summarise(ex = mx_to_e0(mx, age = age), .groups = "drop")
 
-# we compare this later with our weighted-average e35 values just to see.
+# we compare this later with our weighted-average e35 values
 e35_total_compare <- Lt |>
   filter(educ == "Total", sex != "Total") |> 
   select(sex, year, ex)

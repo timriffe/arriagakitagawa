@@ -10,7 +10,6 @@ gaps <- kit |>
   mutate(gap = e35_Females - e35_Males)
 
 tot_gps <- gaps |> 
-  # filter(year == "2016-2019") |> 
   dplyr::select(year, Females = e35_Females, Males = e35_Males) |> 
   pivot_longer(-year,
                names_to = "sex",
@@ -20,15 +19,13 @@ tot_gps <- gaps |>
 ed_gps <- e35_kit |> 
   select(educ, year, Females = e35_Females, Males = e35_Males)  |>      
   pivot_longer(Females:Males, names_to = "sex", values_to = "e35")
-# |> 
-#   filter(year == "2016-2019")
 
-# table
+# table column
 decomp_total |>
   group_by(year, educ) |>
-  summarize(cc_mort = sum(result_rescaled)) %>%
-  filter(year == "2016-2019") %>%
-  pull(cc_mort) %>%
+  summarize(cc_mort = sum(result_rescaled)) |> 
+  filter(year == "2016-2019") |> 
+  pull(cc_mort) |> 
   sum()
 
 mort_gaps <- decomp_total |> 
@@ -45,7 +42,6 @@ dec_gaps <- full_join(mort_gaps, st_gaps, by = join_by(year)) |>
 st_bind <- kit |> 
   ungroup() |> 
   group_by(year) |> 
-  # filter(year == "2016-2019") |>
   summarize(margin = sum(st_component)) |> 
   mutate(educ = "Educ. Composition", .before = 1)
 
@@ -56,12 +52,10 @@ non_stationary_gap <-
 
 education <- e35_kit |> 
   select(educ, year, e35_diff)  |>
-  # filter(year == "2016-2019") |> 
   mutate(type = "By education") |> 
   rename(gap = e35_diff)
 
 tot_gps <- gaps |> 
-  # filter(year == "2016-2019") |> 
   dplyr::select(year, gap) |> 
   mutate(educ = "Total") |> 
   mutate(type = "Stationary")
@@ -69,7 +63,6 @@ tot_gps <- gaps |>
 orig_gap <- e35_total_compare |> 
   pivot_wider(names_from = sex, values_from = ex, names_prefix = "e35_") |> 
   mutate(gap = e35_Females - e35_Males) |>  
-  # filter(year == "2016-2019") |> 
   dplyr::select(year, gap) |> 
   mutate(type = "Non-Stationary") |> 
   mutate(educ = "Total")

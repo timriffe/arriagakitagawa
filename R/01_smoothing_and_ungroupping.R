@@ -1,7 +1,7 @@
 # initial data
 source("R/00_initial_data_preparation.R")
 # ----------------------------------------------------------------------- #
-# I will use this data further for predict() with GAM model results
+# Data to further predict() with GAM model results
 new_data <- expand_grid(
   age  = seq(35, 100, 1),
   year  = c("2016-2019", "2020-2021"),
