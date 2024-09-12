@@ -7,7 +7,7 @@ library(scales)
 library(ggpubr)
 library(mgcv)
 # ----------------------------------------------------------------------- #
-# data from Sergi
+# data
 load("data/data_esp_1621.RData")
 
 # initial data preparation
