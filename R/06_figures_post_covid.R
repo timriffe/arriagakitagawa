@@ -1,42 +1,8 @@
-source("R/00_initial_data_preparation.R")
-source("R/01_smoothing_and_ungroupping.R")
+# source("R/00_initial_data_preparation.R")
+# source("R/01_smoothing_and_ungroupping.R")
 source("R/02_LT_and_average_quantities.R")
 source("R/03_decomposition_results.R")
 source("R/04_gaps.R")
-
-# figure 3 post covid
-decomp_total |>
-  filter(year != "2016-2019") |>
-  group_by(cause) |>
-  summarize(margin = sum(result_rescaled)) |>
-  filter(cause != "Covid-19") |>
-  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) %>%
-              mutate(cause = "Educ. component")) %>%
-  mutate(margin_sign = if_else(sign(margin) == 1, "#F8766D", "#C77CFF")) |>
-  mutate(margin_sign = if_else(cause == "Educ. component", "#00BFC4", margin_sign)) %>%
-  ggplot(aes(
-    y = reorder(cause, margin),
-    x = margin,
-    color = margin_sign,
-    fill = margin_sign
-  )) +
-  geom_col() +
-  guides(color = "none") +
-  theme_minimal() +
-  scale_color_identity() +
-  scale_fill_identity() +
-  scale_x_continuous(breaks = pretty_breaks()) +
-  xlab("Contribution to sex-gap") +
-  theme(
-    legend.position = "none",
-    axis.title = element_blank(),
-    strip.background = element_blank(),
-    strip.text = element_text(face = "bold", color = "black"),
-    legend.text = element_text(face = "bold", color = "black"),
-    legend.title = element_text(face = "bold", color = "black"),
-    axis.text.y = element_text(color = "black", face = "bold"),
-    axis.text.x = element_text(color = "black")
-  )
 
 # figure 1 post covid
 education |>
@@ -84,6 +50,75 @@ education |>
   ) +
   labs(fill = "Education groups", ) +
   labs(y = "Difference (years)")
+# -------------------------------------------- #
+
+# figure 2 post covid
+decomp_total |>
+  filter(year != "2016-2019") |>
+  group_by(educ) |>
+  summarize(margin = sum(result_rescaled)) |>
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) |>
+              mutate(educ = "Educ. component")) |>
+  mutate(educ = factor(
+    educ,
+    levels = c("Educ. component", "Higher", "Secondary", "Primary")
+  )) |>
+  ggplot(aes(y = educ, x = margin, fill = educ)) +
+  geom_col() +
+  guides(color = "none") +
+  theme_minimal() +
+  xlab("Contribution to sex-gap") +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  scale_fill_manual(values = c("#00BFC4", "#00bf7c", "#00b0f6", "#e86bf3")) +
+  xlab("Contribution to sex-gap") +
+  ylab("Education") +
+  theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(color = "black", face = "bold"),
+    axis.text.x = element_text(color = "black")
+  )
+# -------------------------------------------#
+
+# figure 3 post covid
+decomp_total |>
+  filter(year != "2016-2019") |>
+  group_by(cause) |>
+  summarize(margin = sum(result_rescaled)) |>
+  filter(cause != "Covid-19") |>
+  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) %>%
+              mutate(cause = "Educ. component")) %>%
+  mutate(margin_sign = if_else(sign(margin) == 1, "#F8766D", "#C77CFF")) |>
+  mutate(margin_sign = if_else(cause == "Educ. component", "#00BFC4", margin_sign)) %>%
+  ggplot(aes(
+    y = reorder(cause, margin),
+    x = margin,
+    color = margin_sign,
+    fill = margin_sign
+  )) +
+  geom_col() +
+  guides(color = "none") +
+  theme_minimal() +
+  scale_color_identity() +
+  scale_fill_identity() +
+  scale_x_continuous(breaks = pretty_breaks()) +
+  xlab("Contribution to sex-gap") +
+  theme(
+    legend.position = "none",
+    axis.title = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(face = "bold", color = "black"),
+    legend.text = element_text(face = "bold", color = "black"),
+    legend.title = element_text(face = "bold", color = "black"),
+    axis.text.y = element_text(color = "black", face = "bold"),
+    axis.text.x = element_text(color = "black")
+  )
+
+# -------------------------------------------------- #
 
 # figure 4 post covid
 decomp_total |>
@@ -152,34 +187,3 @@ decomp_total |>
     axis.text = element_text(color = "black")
   ) +
   labs(fill = "Education groups")
-
-# figure 2 post covid
-decomp_total |>
-  filter(year != "2016-2019") |>
-  group_by(educ) |>
-  summarize(margin = sum(result_rescaled)) |>
-  full_join(dplyr::select(st_gaps[1, ], margin = cc_str) |>
-              mutate(educ = "Educ. component")) |>
-  mutate(educ = factor(
-    educ,
-    levels = c("Educ. component", "Higher", "Secondary", "Primary")
-  )) |>
-  ggplot(aes(y = educ, x = margin, fill = educ)) +
-  geom_col() +
-  guides(color = "none") +
-  theme_minimal() +
-  xlab("Contribution to sex-gap") +
-  scale_x_continuous(breaks = pretty_breaks()) +
-  scale_fill_manual(values = c("#00BFC4", "#00bf7c", "#00b0f6", "#e86bf3")) +
-  xlab("Contribution to sex-gap") +
-  ylab("Education") +
-  theme(
-    legend.position = "none",
-    axis.title = element_blank(),
-    strip.background = element_blank(),
-    strip.text = element_text(face = "bold", color = "black"),
-    legend.text = element_text(face = "bold", color = "black"),
-    legend.title = element_text(face = "bold", color = "black"),
-    axis.text.y = element_text(color = "black", face = "bold"),
-    axis.text.x = element_text(color = "black")
-  )
