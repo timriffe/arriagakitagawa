@@ -191,3 +191,8 @@ fig <- decomp_total |>
 
 # save figure 4
 ggsave("fig4.pdf", fig, width = 8, height = 10)
+
+
+
+
+

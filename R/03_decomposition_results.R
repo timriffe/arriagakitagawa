@@ -1,5 +1,6 @@
 # source("R/00_initial_data_preparation.R")
 # source("R/01_smoothing_and_ungroupping.R")
+tic()
 source("R/02_LT_and_average_quantities.R")
 
 mxc_decomp <- mxc_single |>
@@ -25,7 +26,7 @@ e35_kit <- Lt |>
          e35_avg = (e35_Females + e35_Males) / 2)
 # ----------------------------------------------------------------------- #
 # population prevalence data from original source
-if (exists(data_5_prepped)){
+if (exists("data_5_prepped")){
   prev <- data_5_prepped |> 
     as_tibble() |>
     filter(year  != "Total",
@@ -74,3 +75,6 @@ decomp_total <- kit |>
   right_join(mxc_decomp, by = join_by(educ, year)) |> 
   group_by(educ, year) |> 
   mutate(result_rescaled = result / sum(result) * e35_component)
+toc()
+
+write_csv(decomp_total, file = "data/decomp_results.csv")
