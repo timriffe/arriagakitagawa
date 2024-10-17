@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------- #
 library(tidyverse)
-library(coddecomp)
+library(LEdecomp)
 library(ggridges)
 library(scales)
 library(ggpubr)
