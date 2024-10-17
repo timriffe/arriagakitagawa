@@ -13,6 +13,7 @@ mxc_decomp <- mxc_single |>
   full_join(averages, 
             by = join_by(educ, age, year)) |>
   mutate(result = mxc_diff * sensitivity) # 13, sens 12
+
 # ----------------------------------------------------------------------- #
 # Kitagawa part: ex by groups
 e35_kit <- Lt |>
@@ -74,7 +75,9 @@ decomp_total <- kit |>
   select(educ, year, e35_component) |> 
   right_join(mxc_decomp, by = join_by(educ, year)) |> 
   group_by(educ, year) |> 
-  mutate(result_rescaled = result / sum(result) * e35_component)
+  mutate(result_rescaled = result / sum(result) * e35_component) |> 
+  ungroup()
+
 toc()
 
 write_csv(decomp_total, file = "data/decomp_results.csv")
