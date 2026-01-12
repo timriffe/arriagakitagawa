@@ -5,24 +5,24 @@ source("R/03_decomposition_results.R")
 source("R/04_gaps.R")
 
 # figure 1
-education |>
-  full_join(tot_gps) |>
-  full_join(orig_gap) |>
-  mutate(labels = educ) |>
-  mutate(educ = ifelse(type == "Stationary", "Total (Stationary)", educ)) |>
-  mutate(educ = ifelse(type == "Non-Stationary", "Total (Non-Stationary)", educ)) |>
-  mutate(educ = factor(
-    educ,
+fig1 <-
+  education |>
+  full_join(tot_gps, by = join_by(educ, year, gap, type)) |>
+  full_join(orig_gap, by = join_by(educ, year, gap, type)) |>
+  mutate(labels = educ,
+         educ = ifelse(type == "Stationary", "Total\n(current conditions)", educ),
+         educ = ifelse(type == "Non-Stationary", "Total\n(current rates)", educ),
+         educ = factor(educ,
     levels = c(
-      "Total (Stationary)",
-      "Total (Non-Stationary)",
+      "Total\n(current conditions)",
+      "Total\n(current rates)",
       "Higher",
       "Secondary",
       "Primary"
     )
   )) |>
-  mutate(type = ifelse(str_detect(type, "By education"), "Education", "e(35) variant")) |>
-  mutate(type = factor(type, levels = c("Education", "e(35) variant"))) |>
+  mutate(type = ifelse(str_detect(type, "By education"), "e(35) by Education", "total e(35) variant")) |>
+  mutate(type = factor(type, levels = c("e(35) by Education", "total e(35) variant"))) |>
   filter(year == "2016-2019") |>
   ggplot(aes(x = educ, y = gap, fill = educ)) +
   geom_col(position = position_dodge(), color = "white") +
@@ -41,7 +41,7 @@ education |>
     strip.text =  element_text(
       face = "bold",
       color = "black",
-      size = 10
+      size = 12
     ),
     axis.text = element_text(face = "bold", color = "black"),
     axis.title.y = element_blank(),
@@ -50,6 +50,7 @@ education |>
   ) +
   labs(fill = "Education groups", ) +
   labs(y = "Difference (years)")
+ggsave("fig1.pdf", fig1, width = 5, height = 4)
 # ----------------------------------------------------- #
 
 # figure 2
